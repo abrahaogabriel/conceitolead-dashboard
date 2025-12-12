@@ -8,9 +8,11 @@ import { KPIGrid } from '../components/Dashboard/KPIGrid';
 import { TopProducts } from '../components/Dashboard/TopProducts';
 import { RecentSales } from '../components/Dashboard/RecentSales';
 import { NextMeetingCard, TeamCard, GoalCard, ActiveClientsCard } from '../components/Dashboard/SideCards';
+import { SalesEvolutionChart } from '../components/Dashboard/SalesEvolutionChart';
+import { ClientSalesChart } from '../components/Dashboard/ClientSalesChart';
 
 export const Dashboard: React.FC = () => {
-    const { metrics, sales, trends, topProducts, loading, filters, setFilters } = useDashboardData();
+    const { metrics, sales, trends, topProducts, monthlyEvolution, topClients, loading, filters, setFilters } = useDashboardData();
     const { profile } = useAuth();
     const [clients, setClients] = useState<Client[]>([]);
 
@@ -37,6 +39,12 @@ export const Dashboard: React.FC = () => {
             <DashboardHeader filters={filters} setFilters={setFilters} clients={clients} />
 
             <KPIGrid metrics={metrics} trends={trends} />
+
+            {/* Visual KPIs - Charts */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+                <SalesEvolutionChart data={monthlyEvolution} />
+                <ClientSalesChart data={topClients} />
+            </div>
 
             {/* Middle Section */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>

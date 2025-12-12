@@ -20,7 +20,18 @@ export const KPICard: React.FC<KPICardProps> = ({ title, value, trend, icon }) =
     }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <h3 style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{title}</h3>
-            <div style={{ color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '8px', borderRadius: '50%' }}>
+            <div style={{
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                padding: '8px',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+            }}>
                 {icon}
             </div>
         </div>

@@ -84,6 +84,8 @@ export const useDashboardData = () => {
         ticketTrend: 'Estável',
     });
     const [topProducts, setTopProducts] = useState<{ name: string, count: number, revenue: number }[]>([]);
+    const [monthlyEvolution, setMonthlyEvolution] = useState<{ month: string, value: number }[]>([]);
+    const [topClients, setTopClients] = useState<{ name: string, value: number, color: string }[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Default filters: Last 30 days
@@ -125,6 +127,8 @@ export const useDashboardData = () => {
 
         setMetrics({ totalSales, totalRevenue, totalCommission, averageTicket });
         calculateTopProducts(filtered);
+        calculateMonthlyEvolution(filtered);
+        calculateTopClients(filtered, []); // Empty clients for mock
         setLoading(false);
     };
 
@@ -184,6 +188,8 @@ export const useDashboardData = () => {
             // Pass clientsData (allClients) to calculateMetrics
             calculateMetrics(finalSales, clientRates, clientsData || []);
             calculateTopProducts(finalSales);
+            calculateMonthlyEvolution(finalSales);
+            calculateTopClients(finalSales, clientsData || []);
             setLoading(false);
 
         } catch (error) {
@@ -276,5 +282,61 @@ export const useDashboardData = () => {
         setTopProducts(sorted);
     };
 
-    return { sales, metrics, trends, topProducts, loading, refresh: fetchDashboardData, filters, setFilters };
+    const calculateMonthlyEvolution = (data: Sale[]) => {
+        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const last6Months: { month: string, value: number }[] = [];
+
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const monthName = monthNames[date.getMonth()];
+
+            const count = data.filter(sale => {
+                const saleMonth = new Date(sale.sale_date).toISOString().slice(0, 7);
+                return saleMonth === monthKey;
+            }).length;
+
+            last6Months.push({ month: monthName, value: count });
+        }
+
+        setMonthlyEvolution(last6Months);
+    };
+
+    const calculateTopClients = (data: Sale[], clientsData: any[]) => {
+        const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+        const clientMap = new Map<string, number>();
+
+        data.forEach(sale => {
+            const current = clientMap.get(sale.client_id) || 0;
+            clientMap.set(sale.client_id, current + 1);
+        });
+
+        const sorted = Array.from(clientMap.entries())
+            .map(([id, count], index) => {
+                const client = clientsData.find(c => c.id === id);
+                return {
+                    name: client?.name || 'Cliente Desconhecido',
+                    value: count,
+                    color: colors[index % colors.length]
+                };
+            })
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5);
+
+        setTopClients(sorted);
+    };
+
+    return {
+        sales,
+        metrics,
+        trends,
+        topProducts,
+        monthlyEvolution,
+        topClients,
+        loading,
+        refresh: fetchDashboardData,
+        filters,
+        setFilters
+    };
 };
