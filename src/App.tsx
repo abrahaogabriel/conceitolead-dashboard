@@ -6,6 +6,7 @@ import { ProtectedRoleRoute } from './components/Layout/ProtectedRoleRoute';
 import { Users } from './pages/Users';
 import { Clients } from './pages/Clients';
 import { SalesGoals } from './pages/SalesGoals';
+import { Governance } from './pages/Governance';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route element={<ProtectedRoleRoute allowedRoles={['admin']} />}>
           <Route path="/users" element={<Users />} />
           <Route path="/clients" element={<Clients />} />
+          <Route path="/governance" element={<Governance />} />
         </Route>
 
         {/* Fallback */}

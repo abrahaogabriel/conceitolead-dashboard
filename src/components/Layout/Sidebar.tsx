@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Target, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Target, Settings, LogOut, Shield } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 import { useAuth } from '../../context/AuthContext';
@@ -37,16 +37,10 @@ export const Sidebar: React.FC = () => {
                             <span>Metas</span>
                         </NavLink>
                         {profile?.role === 'admin' && (
-                            <>
-                                <NavLink to="/users" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
-                                    <Users size={20} />
-                                    <span>Usuários</span>
-                                </NavLink>
-                                <NavLink to="/clients" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
-                                    <Users size={20} />
-                                    <span>Clientes</span>
-                                </NavLink>
-                            </>
+                            <NavLink to="/governance" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+                                <Shield size={20} />
+                                <span style={{ fontSize: '0.9rem' }}>Governança</span>
+                            </NavLink>
                         )}
                     </div>
                 )}

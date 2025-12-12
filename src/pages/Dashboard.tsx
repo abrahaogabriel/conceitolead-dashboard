@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '../components/UI/Card';
 import { useDashboardData } from '../hooks/useDashboardData';
-import { ArrowUpRight, Clock, CheckCircle2, MoreHorizontal, Video } from 'lucide-react';
+import { ArrowUpRight, Clock, CheckCircle2, MoreHorizontal, Video, Filter } from 'lucide-react';
+import { supabase } from '../services/supabase';
+import type { Client } from '../types';
 
 export const Dashboard: React.FC = () => {
-    const { metrics, sales, loading } = useDashboardData();
+    const { metrics, sales, loading, filters, setFilters } = useDashboardData();
+    const [clients, setClients] = useState<Client[]>([]);
+
+    useEffect(() => {
+        const fetchClients = async () => {
+            const { data } = await supabase.from('clients').select('id, name').eq('active', true);
+            if (data) setClients(data as Client[]);
+        };
+        fetchClients();
+    }, []);
 
     if (loading) {
         return (
@@ -20,31 +31,62 @@ export const Dashboard: React.FC = () => {
     return (
         <div style={{ padding: '2rem', maxWidth: '1600px', margin: '0 auto', fontFamily: 'var(--font-family)' }}>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h1 style={{ fontSize: '2rem', fontWeight: 600, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>Dashboard</h1>
                     <p style={{ color: 'var(--text-secondary)' }}>Acompanhe suas vendas, metas e performance.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* Filters */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', padding: '0.5rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)' }}>
+                        <Filter size={16} color="var(--text-secondary)" style={{ marginLeft: '0.5rem' }} />
+                        <input
+                            type="date"
+                            value={filters.startDate}
+                            onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                            style={{ border: 'none', fontSize: '0.875rem', color: 'var(--text-primary)', outline: 'none' }}
+                        />
+                        <span style={{ color: 'var(--text-secondary)' }}>até</span>
+                        <input
+                            type="date"
+                            value={filters.endDate}
+                            onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                            style={{ border: 'none', fontSize: '0.875rem', color: 'var(--text-primary)', outline: 'none' }}
+                        />
+                    </div>
+
+                    <select
+                        value={filters.clientId}
+                        onChange={(e) => setFilters(prev => ({ ...prev, clientId: e.target.value }))}
+                        style={{
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: 'var(--radius-full)',
+                            border: '1px solid var(--border-color)',
+                            backgroundColor: 'white',
+                            color: 'var(--text-primary)',
+                            fontSize: '0.875rem',
+                            cursor: 'pointer',
+                            outline: 'none'
+                        }}
+                    >
+                        <option value="">Todos os Clientes</option>
+                        {clients.map(client => (
+                            <option key={client.id} value={client.id}>{client.name}</option>
+                        ))}
+                    </select>
+
                     <button style={{
                         backgroundColor: 'var(--primary-main)',
                         color: 'white',
                         padding: '0.75rem 1.5rem',
                         borderRadius: 'var(--radius-full)',
                         fontWeight: 500,
-                        boxShadow: 'var(--shadow-lg)'
+                        boxShadow: 'var(--shadow-lg)',
+                        border: 'none',
+                        cursor: 'pointer'
                     }}>
                         + Nova Venda
-                    </button>
-                    <button style={{
-                        backgroundColor: 'white',
-                        color: 'var(--text-primary)',
-                        border: '1px solid var(--border-color)',
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: 'var(--radius-full)',
-                        fontWeight: 500
-                    }}>
-                        Importar Dados
                     </button>
                 </div>
             </div>

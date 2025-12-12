@@ -5,6 +5,8 @@ export interface Client {
     branding_colors?: any;
     active: boolean;
     created_at: string;
+    commission_rate?: number;
+    monthly_fee?: number;
 }
 
 export interface Profile {
@@ -43,4 +45,12 @@ export interface SalesGoal {
     month: number;
     year: number;
     target_amount: number;
+}
+
+export interface ActivityLog {
+    id: string;
+    user_id: string;
+    action: string;
+    details?: any;
+    created_at: string;
 }
