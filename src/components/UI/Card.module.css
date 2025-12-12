@@ -1,0 +1,12 @@
+.card {
+    background-color: var(--background-paper);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    border: none;
+    padding: var(--spacing-lg);
+    overflow: hidden;
+}
+
+.noPadding {
+    padding: 0;
+}
