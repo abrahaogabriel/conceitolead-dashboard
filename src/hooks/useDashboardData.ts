@@ -172,10 +172,34 @@ export const useDashboardData = () => {
         }
     };
 
-    const calculateMetrics = (data: Sale[]) => {
+    const calculateMetrics = async (data: Sale[]) => {
         const totalSales = data.length;
         const totalRevenue = data.reduce((acc, curr) => acc + Number(curr.amount), 0);
-        const totalCommission = data.reduce((acc, curr) => acc + (Number(curr.commission) || 0), 0);
+
+        // Calculate commission based on client's commission_rate
+        // If we have a client filter, use that client's rate, otherwise use the commission from sales
+        let totalCommission = 0;
+
+        if (filters.clientId) {
+            // Fetch client's commission rate
+            const { data: clientData } = await supabase
+                .from('clients')
+                .select('commission_rate')
+                .eq('id', filters.clientId)
+                .single();
+
+            if (clientData && clientData.commission_rate) {
+                // Calculate: revenue * (commission_rate / 100)
+                totalCommission = totalRevenue * (clientData.commission_rate / 100);
+            } else {
+                // Fallback to sum of commissions from sales
+                totalCommission = data.reduce((acc, curr) => acc + (Number(curr.commission) || 0), 0);
+            }
+        } else {
+            // No filter: sum all commissions from sales data
+            totalCommission = data.reduce((acc, curr) => acc + (Number(curr.commission) || 0), 0);
+        }
+
         const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
         setMetrics({

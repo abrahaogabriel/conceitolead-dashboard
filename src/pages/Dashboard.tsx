@@ -4,18 +4,22 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import { ArrowUpRight, Clock, CheckCircle2, MoreHorizontal, Video, Filter } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import type { Client } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 export const Dashboard: React.FC = () => {
     const { metrics, sales, loading, filters, setFilters } = useDashboardData();
+    const { profile } = useAuth();
     const [clients, setClients] = useState<Client[]>([]);
 
     useEffect(() => {
         const fetchClients = async () => {
-            const { data } = await supabase.from('clients').select('id, name').eq('active', true);
-            if (data) setClients(data as Client[]);
+            if (profile?.role === 'admin') {
+                const { data } = await supabase.from('clients').select('id, name').eq('active', true);
+                if (data) setClients(data as Client[]);
+            }
         };
         fetchClients();
-    }, []);
+    }, [profile]);
 
     if (loading) {
         return (
@@ -39,42 +43,46 @@ export const Dashboard: React.FC = () => {
 
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     {/* Filters */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', padding: '0.5rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)' }}>
-                        <Filter size={16} color="var(--text-secondary)" style={{ marginLeft: '0.5rem' }} />
-                        <input
-                            type="date"
-                            value={filters.startDate}
-                            onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                            style={{ border: 'none', fontSize: '0.875rem', color: 'var(--text-primary)', outline: 'none' }}
-                        />
-                        <span style={{ color: 'var(--text-secondary)' }}>até</span>
-                        <input
-                            type="date"
-                            value={filters.endDate}
-                            onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                            style={{ border: 'none', fontSize: '0.875rem', color: 'var(--text-primary)', outline: 'none' }}
-                        />
-                    </div>
+                    {profile?.role === 'admin' && (
+                        <>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', padding: '0.5rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)' }}>
+                                <Filter size={16} color="var(--text-secondary)" style={{ marginLeft: '0.5rem' }} />
+                                <input
+                                    type="date"
+                                    value={filters.startDate}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                                    style={{ border: 'none', fontSize: '0.875rem', color: 'var(--text-primary)', outline: 'none' }}
+                                />
+                                <span style={{ color: 'var(--text-secondary)' }}>até</span>
+                                <input
+                                    type="date"
+                                    value={filters.endDate}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                                    style={{ border: 'none', fontSize: '0.875rem', color: 'var(--text-primary)', outline: 'none' }}
+                                />
+                            </div>
 
-                    <select
-                        value={filters.clientId}
-                        onChange={(e) => setFilters(prev => ({ ...prev, clientId: e.target.value }))}
-                        style={{
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: 'var(--radius-full)',
-                            border: '1px solid var(--border-color)',
-                            backgroundColor: 'white',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.875rem',
-                            cursor: 'pointer',
-                            outline: 'none'
-                        }}
-                    >
-                        <option value="">Todos os Clientes</option>
-                        {clients.map(client => (
-                            <option key={client.id} value={client.id}>{client.name}</option>
-                        ))}
-                    </select>
+                            <select
+                                value={filters.clientId}
+                                onChange={(e) => setFilters(prev => ({ ...prev, clientId: e.target.value }))}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    borderRadius: 'var(--radius-full)',
+                                    border: '1px solid var(--border-color)',
+                                    backgroundColor: 'white',
+                                    color: 'var(--text-primary)',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    outline: 'none'
+                                }}
+                            >
+                                <option value="">Todos os Clientes</option>
+                                {clients.map(client => (
+                                    <option key={client.id} value={client.id}>{client.name}</option>
+                                ))}
+                            </select>
+                        </>
+                    )}
 
                     <button style={{
                         backgroundColor: 'var(--primary-main)',

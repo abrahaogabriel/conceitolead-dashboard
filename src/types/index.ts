@@ -12,6 +12,7 @@ export interface Client {
 export interface Profile {
     id: string;
     full_name: string | null;
+    email?: string; // Added field
     role: 'admin' | 'sales' | 'client';
     client_id?: string;
     created_at: string;
