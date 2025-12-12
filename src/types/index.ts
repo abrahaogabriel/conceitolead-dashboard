@@ -22,7 +22,6 @@ export interface Product {
     id: string;
     client_id: string;
     name: string;
-    price?: number;
     created_at: string;
 }
 

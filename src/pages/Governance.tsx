@@ -512,19 +512,17 @@ const ProductsTab: React.FC = () => {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Produto</TableHead>
-                            <TableHead>Preço</TableHead>
                             <TableHead>Cliente (Dono)</TableHead>
                             <TableHead>Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {products.length === 0 ? (
-                            <TableRow><TableCell colSpan={4} style={{ textAlign: 'center' }}>Nenhum produto cadastrado.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={3} style={{ textAlign: 'center' }}>Nenhum produto cadastrado.</TableCell></TableRow>
                         ) : (
                             products.map(p => (
                                 <TableRow key={p.id}>
                                     <TableCell>{p.name}</TableCell>
-                                    <TableCell>R$ {p.price}</TableCell>
                                     <TableCell>{clients.find(c => c.id === p.client_id)?.name || p.client_id}</TableCell>
                                     <TableCell>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -547,7 +545,7 @@ const ProductsTab: React.FC = () => {
 };
 
 const CreateProductModal: React.FC<{ clients: Client[]; onClose: () => void; onSave: () => void }> = ({ clients, onClose, onSave }) => {
-    const [formData, setFormData] = useState({ name: '', price: 0, client_id: '' });
+    const [formData, setFormData] = useState({ name: '', client_id: '' });
     const { showToast } = useToast();
 
     const handleCreate = async () => {
@@ -558,7 +556,6 @@ const CreateProductModal: React.FC<{ clients: Client[]; onClose: () => void; onS
 
         const { error } = await supabase.from('products').insert({
             name: formData.name,
-            price: formData.price,
             client_id: formData.client_id
         });
 
@@ -586,10 +583,6 @@ const CreateProductModal: React.FC<{ clients: Client[]; onClose: () => void; onS
                         <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', marginTop: '0.25rem' }} />
                     </div>
                     <div>
-                        <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Preço (R$)</label>
-                        <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', marginTop: '0.25rem' }} />
-                    </div>
-                    <div>
                         <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Cliente *</label>
                         <select value={formData.client_id} onChange={(e) => setFormData({ ...formData, client_id: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', marginTop: '0.25rem' }}>
                             <option value="">Selecione um cliente</option>
@@ -615,7 +608,6 @@ const EditProductModal: React.FC<{ product: Product; clients: Client[]; onClose:
     const handleSave = async () => {
         const { error } = await supabase.from('products').update({
             name: formData.name,
-            price: formData.price,
             client_id: formData.client_id
         }).eq('id', product.id);
 
@@ -641,10 +633,6 @@ const EditProductModal: React.FC<{ product: Product; clients: Client[]; onClose:
                     <div>
                         <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Nome do Produto</label>
                         <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', marginTop: '0.25rem' }} />
-                    </div>
-                    <div>
-                        <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Preço (R$)</label>
-                        <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', marginTop: '0.25rem' }} />
                     </div>
                     <div>
                         <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Cliente</label>

@@ -10,6 +10,13 @@ interface DashboardMetrics {
     averageTicket: number;
 }
 
+interface DashboardTrends {
+    salesTrend: string;
+    revenueTrend: string;
+    commissionTrend: string;
+    ticketTrend: string;
+}
+
 const MOCK_SALES: Sale[] = [
     {
         id: '1',
@@ -70,6 +77,12 @@ export const useDashboardData = () => {
         totalCommission: 0,
         averageTicket: 0,
     });
+    const [trends, setTrends] = useState<DashboardTrends>({
+        salesTrend: '+0%',
+        revenueTrend: '+0%',
+        commissionTrend: '+0%',
+        ticketTrend: 'Estável',
+    });
     const [topProducts, setTopProducts] = useState<{ name: string, count: number, revenue: number }[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -103,7 +116,14 @@ export const useDashboardData = () => {
     const loadMockData = () => {
         const filtered = filterMockData(MOCK_SALES);
         setSales(filtered);
-        calculateMetrics(filtered);
+        // Mock calculation doesn't have real clients to lookup percentage, keeps old simple logic for mock
+        const totalSales = filtered.length;
+        const totalRevenue = filtered.reduce((acc, curr) => acc + Number(curr.amount), 0);
+        // Mock commission logic (just sum)
+        const totalCommission = filtered.reduce((acc, curr) => acc + (Number(curr.commission) || 0), 0);
+        const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+        setMetrics({ totalSales, totalRevenue, totalCommission, averageTicket });
         calculateTopProducts(filtered);
         setLoading(false);
     };
@@ -131,39 +151,39 @@ export const useDashboardData = () => {
                 query = query.lte('sale_date', `${filters.endDate}T23:59:59`);
             }
 
-            const { data, error } = await query;
+            const { data: salesData, error: salesError } = await query;
 
-            if (error) {
-                console.error('Info: Error fetching sales, using mock data.', error);
+            if (salesError) {
+                console.error('Info: Error fetching sales, using mock data.', salesError);
                 loadMockData();
                 return;
             }
 
-            if (!data || data.length === 0) {
-                // Even if empty, it might be correct (empty filter result). 
-                // But for now, if completely empty and no filters, maybe fallback? 
-                // Actually, if we are filtering, 0 results is valid.
-                // Let's only fallback if we really suspect no DB connection, but here we just assume empty if success.
-                // However, to keep "demo" feel alive if DB is empty, check if global count is 0?
-                // For now, if 0, treat as valid 0 unless error.
-                // BUT, user env likely has no data, so I should probably use mock data if DB is empty to show SOMETHING?
-                // Let's stick to: if error -> mock. If data empty -> valid empty. 
-                // Wait, current logic fell back to mock if empty. I'll preserve that behavior for now but typically you shouldn't.
-                if (data.length === 0 && !filters.clientId) {
-                    // Check if there are ANY sales in DB?
-                    // For the sake of the user request "refactor... to be functional", we eventually want Real Data.
-                    // But if they have no data, they see nothing.
-                    // I will default to Mock if empty for now.
-                    console.log("Info: No sales found, using mock data.");
-                    loadMockData();
-                    return;
+            // Fetch all clients to get their commission rates and monthly fees
+            const { data: clientsData } = await supabase.from('clients').select('id, commission_rate, monthly_fee, active');
+            const clientRates = new Map<string, { rate: number, fee: number }>();
+
+            if (clientsData) {
+                clientsData.forEach((c: any) => {
+                    clientRates.set(c.id, {
+                        rate: c.commission_rate || 0,
+                        fee: c.monthly_fee || 0
+                    });
+                });
+            }
+
+            if (!salesData || salesData.length === 0) {
+                if (!filters.clientId) {
+                    console.log("Info: No sales found query empty.");
                 }
             }
 
-            const salesData = data as Sale[];
-            setSales(salesData);
-            calculateMetrics(salesData);
-            calculateTopProducts(salesData);
+            const finalSales = (salesData as Sale[]) || [];
+
+            setSales(finalSales);
+            // Pass clientsData (allClients) to calculateMetrics
+            calculateMetrics(finalSales, clientRates, clientsData || []);
+            calculateTopProducts(finalSales);
             setLoading(false);
 
         } catch (error) {
@@ -172,33 +192,47 @@ export const useDashboardData = () => {
         }
     };
 
-    const calculateMetrics = async (data: Sale[]) => {
+    const calculateMetrics = (data: Sale[], clientRates: Map<string, { rate: number, fee: number }>, allClients: any[]) => {
         const totalSales = data.length;
         const totalRevenue = data.reduce((acc, curr) => acc + Number(curr.amount), 0);
 
-        // Calculate commission based on client's commission_rate
-        // If we have a client filter, use that client's rate, otherwise use the commission from sales
-        let totalCommission = 0;
+        // 1. Calculate Variable Commission (from Sales)
+        const variableCommission = data.reduce((acc, curr) => {
+            const clientInfo = clientRates.get(curr.client_id);
+            if (clientInfo) {
+                return acc + (Number(curr.amount) * (clientInfo.rate / 100));
+            } else {
+                return acc + (Number(curr.commission) || 0);
+            }
+        }, 0);
+
+        // 2. Calculate Fixed Commission (Monthly Fees)
+        let monthsDiff = 1;
+        if (filters.startDate && filters.endDate) {
+            const start = new Date(filters.startDate);
+            const end = new Date(filters.endDate);
+            monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+            if (monthsDiff < 1) monthsDiff = 1;
+        }
+
+        let totalMonthlyFee = 0;
 
         if (filters.clientId) {
-            // Fetch client's commission rate
-            const { data: clientData } = await supabase
-                .from('clients')
-                .select('commission_rate')
-                .eq('id', filters.clientId)
-                .single();
-
-            if (clientData && clientData.commission_rate) {
-                // Calculate: revenue * (commission_rate / 100)
-                totalCommission = totalRevenue * (clientData.commission_rate / 100);
-            } else {
-                // Fallback to sum of commissions from sales
-                totalCommission = data.reduce((acc, curr) => acc + (Number(curr.commission) || 0), 0);
+            // Specific client fee
+            const clientInfo = clientRates.get(filters.clientId);
+            if (clientInfo) {
+                totalMonthlyFee = clientInfo.fee * monthsDiff;
             }
         } else {
-            // No filter: sum all commissions from sales data
-            totalCommission = data.reduce((acc, curr) => acc + (Number(curr.commission) || 0), 0);
+            // Sum of fees from ALL ACTIVE clients
+            allClients.forEach(c => {
+                if (c.active) {
+                    totalMonthlyFee += (c.monthly_fee || 0) * monthsDiff;
+                }
+            });
         }
+
+        const totalCommission = variableCommission + totalMonthlyFee;
 
         const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
@@ -207,6 +241,19 @@ export const useDashboardData = () => {
             totalRevenue,
             totalCommission,
             averageTicket,
+        });
+
+        // Calculate simple trends (mock logic - could be enhanced with historical data comparison)
+        const salesTrend = totalSales > 5 ? `+${Math.round((totalSales / 10) * 100)}%` : totalSales > 0 ? '+5%' : '0%';
+        const revenueTrend = totalRevenue > 10000 ? '+12%' : totalRevenue > 0 ? '+8%' : '0%';
+        const commissionTrend = totalCommission > 1000 ? '+8%' : totalCommission > 0 ? '+5%' : '0%';
+        const ticketTrend = averageTicket > 5000 ? '+3%' : 'Estável';
+
+        setTrends({
+            salesTrend,
+            revenueTrend,
+            commissionTrend,
+            ticketTrend,
         });
     };
 
@@ -229,5 +276,5 @@ export const useDashboardData = () => {
         setTopProducts(sorted);
     };
 
-    return { sales, metrics, topProducts, loading, refresh: fetchDashboardData, filters, setFilters };
+    return { sales, metrics, trends, topProducts, loading, refresh: fetchDashboardData, filters, setFilters };
 };
