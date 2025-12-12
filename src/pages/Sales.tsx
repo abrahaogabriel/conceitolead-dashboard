@@ -3,7 +3,7 @@ import { Card } from '../components/UI/Card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/UI/Table';
 import { Button } from '../components/UI/Button';
 import { supabase } from '../services/supabase';
-import type { Sale, Client, Profile } from '../types';
+import type { Sale, Client, Profile, Product } from '../types';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { logActivity } from '../utils/activityLogger';
@@ -12,6 +12,7 @@ export const Sales: React.FC = () => {
     const [sales, setSales] = useState<Sale[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [salespeople, setSalespeople] = useState<Profile[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [creatingSale, setCreatingSale] = useState(false);
     const [editingSale, setEditingSale] = useState<Sale | null>(null);
     const { showToast } = useToast();
@@ -39,14 +40,21 @@ export const Sales: React.FC = () => {
             if (data) setClients(data as Client[]);
         };
 
-        // Fetch salespeople for dropdown
+        // Fetch salespeople for dropdown (only sales role, not admin)
         const fetchSalespeople = async () => {
-            const { data } = await supabase.from('profiles').select('id, full_name').in('role', ['admin', 'sales']);
+            const { data } = await supabase.from('profiles').select('id, full_name').eq('role', 'sales');
             if (data) setSalespeople(data as Profile[]);
+        };
+
+        // Fetch products for dropdown
+        const fetchProducts = async () => {
+            const { data } = await supabase.from('products').select('id, name, client_id');
+            if (data) setProducts(data as Product[]);
         };
 
         fetchClients();
         fetchSalespeople();
+        fetchProducts();
     }, []);
 
     const handleDelete = async (sale: Sale) => {
@@ -79,6 +87,7 @@ export const Sales: React.FC = () => {
                 <CreateSaleModal
                     clients={clients}
                     salespeople={salespeople}
+                    products={products}
                     onClose={() => setCreatingSale(false)}
                     onSave={fetchSales}
                 />
@@ -89,6 +98,7 @@ export const Sales: React.FC = () => {
                     sale={editingSale}
                     clients={clients}
                     salespeople={salespeople}
+                    products={products}
                     onClose={() => setEditingSale(null)}
                     onSave={fetchSales}
                 />
@@ -183,9 +193,10 @@ export const Sales: React.FC = () => {
 const CreateSaleModal: React.FC<{
     clients: Client[];
     salespeople: Profile[];
+    products: Product[];
     onClose: () => void;
     onSave: () => void
-}> = ({ clients, salespeople, onClose, onSave }) => {
+}> = ({ clients, salespeople, products, onClose, onSave }) => {
     const [formData, setFormData] = useState({
         client_id: '',
         salesperson_id: '',
@@ -264,11 +275,21 @@ const CreateSaleModal: React.FC<{
 
                     <div style={{ gridColumn: '1 / -1' }}>
                         <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Produto *</label>
-                        <input
+                        <select
                             value={formData.product_name}
                             onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
                             style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', marginTop: '0.25rem' }}
-                        />
+                        >
+                            <option value="">Selecione um produto</option>
+                            {products
+                                .filter(p => !formData.client_id || p.client_id === formData.client_id)
+                                .map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                        </select>
+                        {formData.client_id && products.filter(p => p.client_id === formData.client_id).length === 0 && (
+                            <p style={{ fontSize: '0.75rem', color: 'var(--status-warning)', marginTop: '0.25rem' }}>
+                                Nenhum produto cadastrado para este cliente
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -353,9 +374,10 @@ const EditSaleModal: React.FC<{
     sale: Sale;
     clients: Client[];
     salespeople: Profile[];
+    products: Product[];
     onClose: () => void;
     onSave: () => void
-}> = ({ sale, clients, salespeople, onClose, onSave }) => {
+}> = ({ sale, clients, salespeople, products, onClose, onSave }) => {
     const [formData, setFormData] = useState({
         ...sale,
         sale_date: new Date(sale.sale_date).toISOString().split('T')[0]
@@ -421,11 +443,15 @@ const EditSaleModal: React.FC<{
 
                     <div style={{ gridColumn: '1 / -1' }}>
                         <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Produto</label>
-                        <input
+                        <select
                             value={formData.product_name}
                             onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
                             style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', marginTop: '0.25rem' }}
-                        />
+                        >
+                            {products
+                                .filter(p => !formData.client_id || p.client_id === formData.client_id)
+                                .map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                        </select>
                     </div>
 
                     <div>
