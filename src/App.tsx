@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { Sales } from './pages/Sales';
 import { ProtectedRoute } from './components/Layout/ProtectedRoute';
 import { ProtectedRoleRoute } from './components/Layout/ProtectedRoleRoute';
 import { Users } from './pages/Users';
@@ -17,7 +18,7 @@ function App() {
         {/* Protected Routes - Accessible by all authenticated users */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/sales" element={<Dashboard />} /> {/* Reuse dashboard for sales for now as View */}
+          <Route path="/sales" element={<Sales />} />
           <Route path="/goals" element={<SalesGoals />} />
           <Route path="/settings" element={<div>Configurações</div>} />
         </Route>

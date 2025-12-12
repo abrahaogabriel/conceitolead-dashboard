@@ -37,6 +37,9 @@ export interface Sale {
     status: string;
     sale_date: string;
     created_at: string;
+    lead_source?: string;
+    utm_source?: string;
+    sales_platform?: string;
 }
 
 export interface SalesGoal {
