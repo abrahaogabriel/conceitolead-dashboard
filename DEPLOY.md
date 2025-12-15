@@ -19,26 +19,32 @@ cd conceitolead_hub
 
 ### 2. Configurar Variáveis de Ambiente
 
-Crie um arquivo `.env` na raiz do projeto (não será incluído no build Docker):
+**IMPORTANTE:** No Vite, as variáveis de ambiente são embedadas no código durante o build, não em runtime.
+
+Crie um arquivo `.env` na raiz do projeto:
 
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-**Importante:** As variáveis de ambiente do Supabase devem estar corretas no arquivo `.env` durante o build, pois o Vite as embute no código JavaScript durante a compilação.
+Adicione suas credenciais do Supabase:
+
+```
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY=sua_chave_anonima_aqui
+```
+
+**ATENÇÃO:** Este arquivo `.env` será lido pelo docker-compose durante o build e as variáveis serão passadas como build args para o Dockerfile.
 
 ### 3. Build e Deploy com Docker Swarm
 
-Se você estiver usando Docker Swarm (como sugere o docker-compose.yml):
-
 ```bash
-# Fazer o build da imagem
-docker build -t conceitolead_hub:latest .
-
-# Deploy da stack
+# O docker-compose lerá o .env e passará as variáveis para o build
 docker stack deploy -c docker-compose.yml conceitolead_hub
 ```
+
+**Nota:** O Docker Swarm com `docker stack deploy` irá automaticamente fazer o build da imagem usando as variáveis do arquivo `.env`.
 
 ### 4. Verificar o Deploy
 

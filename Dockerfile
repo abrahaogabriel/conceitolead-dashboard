@@ -1,6 +1,14 @@
 # 1. Build Stage
 FROM node:20-alpine AS build
 
+# Argumentos de build para variáveis de ambiente
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+# Define as variáveis de ambiente para o build
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 WORKDIR /app
 
 # Instala dependências (cache eficiente)
