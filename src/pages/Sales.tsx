@@ -97,7 +97,6 @@ export const Sales: React.FC = () => {
                 <EditSaleModal
                     sale={editingSale}
                     clients={clients}
-                    salespeople={salespeople}
                     products={products}
                     onClose={() => setEditingSale(null)}
                     onSave={fetchSales}
