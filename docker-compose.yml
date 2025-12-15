@@ -2,13 +2,7 @@ version: "3.7"
 
 services:
   app:
-    # Build da imagem a partir do Dockerfile local
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    # Usar imagem que foi buildada com o script build.sh
     image: conceitolead_hub:latest
     networks:
       - nddNet

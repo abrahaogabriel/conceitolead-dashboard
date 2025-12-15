@@ -37,16 +37,32 @@ VITE_SUPABASE_ANON_KEY=sua_chave_anonima_aqui
 
 **ATENÇÃO:** Este arquivo `.env` será lido pelo docker-compose durante o build e as variáveis serão passadas como build args para o Dockerfile.
 
-### 3. Build e Deploy com Docker Swarm
+### 3. Build da Imagem Docker
+
+**IMPORTANTE:** Use o script `build.sh` para fazer o build com as variáveis de ambiente corretas.
 
 ```bash
-# O docker-compose lerá o .env e passará as variáveis para o build
+# Dar permissão de execução ao script
+chmod +x build.sh
+
+# Executar o script de build
+./build.sh
+```
+
+O script irá:
+1. Carregar as variáveis do arquivo `.env`
+2. Passar as variáveis como `--build-arg` para o `docker build`
+3. Criar a imagem `conceitolead_hub:latest` com as variáveis embedadas
+
+### 4. Deploy com Docker Swarm
+
+Após o build bem-sucedido, faça o deploy:
+
+```bash
 docker stack deploy -c docker-compose.yml conceitolead_hub
 ```
 
-**Nota:** O Docker Swarm com `docker stack deploy` irá automaticamente fazer o build da imagem usando as variáveis do arquivo `.env`.
-
-### 4. Verificar o Deploy
+### 5. Verificar o Deploy
 
 ```bash
 # Lista os serviços da stack
