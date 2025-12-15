@@ -1,0 +1,45 @@
+version: "3.7"
+
+services:
+  app:
+    # Build da imagem a partir do Dockerfile local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: conceitolead_hub:latest
+    networks:
+      - nddNet
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        # Habilita Traefik para este serviço
+        - traefik.enable=true
+        
+        # Configuração do roteador HTTP (redirecionamento para HTTPS)
+        - traefik.http.routers.conceitolead_hub_http.rule=Host(`hub.conceitolead.com.br`)
+        - traefik.http.routers.conceitolead_hub_http.entrypoints=web
+        - traefik.http.routers.conceitolead_hub_http.middlewares=redirect-to-https
+        
+        # Configuração do roteador HTTPS
+        - traefik.http.routers.conceitolead_hub.rule=Host(`hub.conceitolead.com.br`)
+        - traefik.http.routers.conceitolead_hub.entrypoints=websecure
+        - traefik.http.routers.conceitolead_hub.priority=1
+        - traefik.http.routers.conceitolead_hub.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.conceitolead_hub.service=conceitolead_hub
+        
+        # Middleware de redirecionamento HTTPS
+        - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+        - traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true
+        
+        # Configuração do serviço
+        - traefik.http.services.conceitolead_hub.loadbalancer.server.port=80
+        - traefik.http.services.conceitolead_hub.loadbalancer.passHostHeader=true
+
+networks:
+  nddNet:
+    external: true
+    name: nddNet
