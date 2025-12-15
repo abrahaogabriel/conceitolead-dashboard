@@ -373,11 +373,10 @@ const CreateSaleModal: React.FC<{
 const EditSaleModal: React.FC<{
     sale: Sale;
     clients: Client[];
-    salespeople: Profile[];
     products: Product[];
     onClose: () => void;
     onSave: () => void
-}> = ({ sale, clients, salespeople, products, onClose, onSave }) => {
+}> = ({ sale, clients, products, onClose, onSave }) => {
     const [formData, setFormData] = useState({
         ...sale,
         sale_date: new Date(sale.sale_date).toISOString().split('T')[0]

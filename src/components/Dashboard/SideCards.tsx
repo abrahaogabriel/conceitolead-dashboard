@@ -58,7 +58,7 @@ export const TeamCard: React.FC = () => {
             {teamMembers.length === 0 ? (
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Nenhum membro encontrado.</p>
             ) : (
-                teamMembers.map((member, i) => (
+                teamMembers.map((member) => (
                     <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                         <div style={{
                             width: '36px',
