@@ -5,6 +5,7 @@ import { Button } from '../components/UI/Button';
 import { Input } from '../components/UI/Input';
 import { Card } from '../components/UI/Card';
 import styles from './Login.module.css';
+import logo from '../assets/logo-horizontal.png';
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -40,7 +41,7 @@ export const Login: React.FC = () => {
         <div className={styles.container}>
             <Card className={styles.card}>
                 <div className={styles.header}>
-                    <h1>Conceito Lead</h1>
+                    <img src={logo} alt="Conceito Lead" className={styles.logo} />
                     <p>Entre na sua conta</p>
                 </div>
 

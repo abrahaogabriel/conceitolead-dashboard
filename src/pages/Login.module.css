@@ -16,10 +16,12 @@
     margin-bottom: var(--spacing-xl);
 }
 
-.header h1 {
-    font-size: var(--font-size-2xl);
-    color: var(--primary-main);
-    margin-bottom: var(--spacing-xs);
+.logo {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    margin: 0 auto var(--spacing-md);
+    display: block;
 }
 
 .header p {
