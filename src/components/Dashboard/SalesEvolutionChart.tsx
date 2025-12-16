@@ -1,6 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '../UI/Card';
 import { TrendingUp, Calendar } from 'lucide-react';
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    ReferenceLine,
+    Cell
+} from 'recharts';
 
 interface DataPoint {
     label: string;
@@ -17,6 +28,7 @@ type Period = 'day' | 'week' | 'month' | 'quarter';
 export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales }) => {
     const [period, setPeriod] = useState<Period>('month');
 
+    // Lógica de processamento de dados mantida
     const chartData = useMemo(() => {
         const now = new Date();
         const data: DataPoint[] = [];
@@ -34,7 +46,7 @@ export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales 
                 }).length;
 
                 data.push({
-                    label: date.getDate().toString(),
+                    label: date.getDate().toString(), // Dia do mês
                     value: count,
                     date: new Date(date)
                 });
@@ -115,13 +127,40 @@ export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales 
         }
     };
 
-    // Ajusta steps dinamicamente: se maxValue < 5, usa o próprio valor como steps para evitar decimais/repetições
-    const steps = maxValue < 5 ? Math.max(maxValue, 1) : 5;
-    const yAxisLabels = Array.from({ length: steps + 1 }, (_, i) => {
-        const value = (maxValue / steps) * i;
-        // Garante que não apareçam casas decimais se não necessário
-        return Number.isInteger(value) ? value : Math.round(value * 10) / 10;
-    }).map(v => Math.floor(v)).reverse(); // Força inteiros para vendas
+    // Estilo personalizado para o Tooltip
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <div style={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    outline: 'none'
+                }}>
+                    <p style={{
+                        fontSize: '0.75rem',
+                        color: '#64748b',
+                        marginBottom: '4px',
+                        textTransform: 'uppercase',
+                        fontWeight: 600
+                    }}>
+                        {label}
+                    </p>
+                    <p style={{
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: 'var(--primary-main)',
+                        margin: 0
+                    }}>
+                        {payload[0].value} <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>vendas</span>
+                    </p>
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <Card>
@@ -155,109 +194,49 @@ export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales 
                 </div>
             </div>
 
-            {/* Container do Gráfico com Eixo Y */}
-            <div style={{ display: 'flex', height: '250px', gap: '1rem', marginTop: '1rem' }}>
-
-                {/* Eixo Y */}
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingBottom: '2rem', color: 'var(--text-secondary)', fontSize: '0.7rem' }}>
-                    {yAxisLabels.map((label, index) => (
-                        <span key={index}>{label}</span>
-                    ))}
-                </div>
-
-                {/* Área de Plotagem */}
-                <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'flex-end', paddingBottom: '2rem' }}>
-
-                    {/* Linhas de Grade de Fundo */}
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', zIndex: 0 }}>
-                        {yAxisLabels.map((_, index) => (
-                            <div key={index} style={{ width: '100%', height: '1px', backgroundColor: index === steps ? 'transparent' : '#f1f5f9' }} />
-                        ))}
-                    </div>
-
-                    {/* Linha de Média */}
-                    {avgValue > 0 && (
-                        <div style={{
-                            position: 'absolute',
-                            left: 0,
-                            right: 0,
-                            bottom: `calc(2rem + ${(avgValue / maxValue) * 100 * (250 - 32) / 250}px)`, // Ajuste aproximado
-                            height: '1px',
-                            borderTop: '2px dashed var(--status-warning)',
-                            zIndex: 1,
-                            opacity: 0.7
-                        }} title={`Média: ${Math.round(avgValue)}`} />
-                    )}
-
-                    {/* Barras */}
-                    <div style={{ display: 'flex', width: '100%', alignItems: 'flex-end', justifyContent: 'space-around', height: '100%', zIndex: 2 }}>
-                        {chartData.map((item, index) => {
-                            const percentage = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-
-                            return (
-                                <div key={index} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', maxWidth: '60px' }}>
-
-                                    {/* A Barra */}
-                                    <div style={{
-                                        width: '60%',
-                                        height: `${percentage}%`,
-                                        minHeight: item.value > 0 ? '4px' : '0',
-                                        background: 'var(--primary-main)',
-                                        borderRadius: '4px 4px 0 0',
-                                        transition: 'height 0.5s ease',
-                                        cursor: 'pointer',
-                                        position: 'relative'
-                                    }}
-                                        title={`${item.label}: ${item.value} vendas`}
-                                    >
-                                        {/* Tooltip on Hover (simples) */}
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '-25px',
-                                            left: '50%',
-                                            transform: 'translateX(-50%)',
-                                            background: '#1e293b',
-                                            color: 'white',
-                                            padding: '2px 6px',
-                                            borderRadius: '4px',
-                                            fontSize: '0.7rem',
-                                            whiteSpace: 'nowrap',
-                                            opacity: 0,
-                                            transition: 'opacity 0.2s',
-                                            pointerEvents: 'none'
-                                        }} className="chart-tooltip">
-                                            {item.value}
-                                        </div>
-                                    </div>
-
-                                    {/* Label X */}
-                                    <span style={{
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        fontSize: '0.7rem',
-                                        color: 'var(--text-secondary)',
-                                        marginTop: '0.5rem',
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        width: '100%',
-                                        textAlign: 'center'
-                                    }}>
-                                        {item.label}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+            {/* Container Responsivo do Recharts */}
+            <div style={{ width: '100%', height: 250, marginTop: '1rem' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        data={chartData}
+                        margin={{
+                            top: 5,
+                            right: 10,
+                            left: -20, // Ajuste para aproximar o eixo Y
+                            bottom: 0,
+                        }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis
+                            dataKey="label"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            dy={10}
+                        />
+                        <YAxis
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            allowDecimals={false} // Evita decimais (0.5 vendas)
+                        />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(241, 245, 249, 0.4)' }} />
+                        <ReferenceLine y={avgValue} stroke="#f59e0b" strokeDasharray="3 3" />
+                        <Bar
+                            dataKey="value"
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={60}
+                        >
+                            {chartData.map((entry, index) => (
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={entry.value === maxValue && maxValue > 0 ? 'var(--primary-main)' : '#cbd5e1'}
+                                />
+                            ))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
             </div>
-
-            <style>
-                {`
-                .chart-tooltip { opacity: 0; }
-                div:hover > .chart-tooltip { opacity: 1; }
-                `}
-            </style>
 
             {/* Estatísticas */}
             <div style={{
