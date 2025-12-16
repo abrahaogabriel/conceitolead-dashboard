@@ -115,6 +115,14 @@ export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales 
         }
     };
 
+    // Ajusta steps dinamicamente: se maxValue < 5, usa o próprio valor como steps para evitar decimais/repetições
+    const steps = maxValue < 5 ? Math.max(maxValue, 1) : 5;
+    const yAxisLabels = Array.from({ length: steps + 1 }, (_, i) => {
+        const value = (maxValue / steps) * i;
+        // Garante que não apareçam casas decimais se não necessário
+        return Number.isInteger(value) ? value : Math.round(value * 10) / 10;
+    }).map(v => Math.floor(v)).reverse(); // Força inteiros para vendas
+
     return (
         <Card>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -124,147 +132,132 @@ export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales 
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button
-                        onClick={() => setPeriod('day')}
-                        style={{
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--border-color)',
-                            background: period === 'day' ? 'var(--primary-light)' : 'white',
-                            color: period === 'day' ? 'white' : 'var(--text-primary)',
-                            fontSize: '0.75rem',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        Dia
-                    </button>
-                    <button
-                        onClick={() => setPeriod('week')}
-                        style={{
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--border-color)',
-                            background: period === 'week' ? 'var(--primary-light)' : 'white',
-                            color: period === 'week' ? 'white' : 'var(--text-primary)',
-                            fontSize: '0.75rem',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        Semana
-                    </button>
-                    <button
-                        onClick={() => setPeriod('month')}
-                        style={{
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--border-color)',
-                            background: period === 'month' ? 'var(--primary-light)' : 'white',
-                            color: period === 'month' ? 'white' : 'var(--text-primary)',
-                            fontSize: '0.75rem',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        Mês
-                    </button>
-                    <button
-                        onClick={() => setPeriod('quarter')}
-                        style={{
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--border-color)',
-                            background: period === 'quarter' ? 'var(--primary-light)' : 'white',
-                            color: period === 'quarter' ? 'white' : 'var(--text-primary)',
-                            fontSize: '0.75rem',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        Trimestre
-                    </button>
+                    {(['day', 'week', 'month', 'quarter'] as Period[]).map((p) => (
+                        <button
+                            key={p}
+                            onClick={() => setPeriod(p)}
+                            style={{
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid var(--border-color)',
+                                background: period === p ? 'var(--primary-light)' : 'white',
+                                color: period === p ? 'white' : 'var(--text-primary)',
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                textTransform: 'capitalize'
+                            }}
+                        >
+                            {p === 'day' ? 'Dia' : p === 'week' ? 'Semana' : p === 'month' ? 'Mês' : 'Trimestre'}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {/* Gráfico de Barras */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: period === 'day' ? '0.5rem' : '0.75rem', height: '220px', padding: '1rem 0', position: 'relative' }}>
-                {/* Linha de média */}
-                <div style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    bottom: `${(avgValue / maxValue) * 100}%`,
-                    height: '1px',
-                    borderTop: '2px dashed #cbd5e1',
-                    zIndex: 1
-                }} />
+            {/* Container do Gráfico com Eixo Y */}
+            <div style={{ display: 'flex', height: '250px', gap: '1rem', marginTop: '1rem' }}>
 
-                {chartData.map((item, index) => {
-                    const percentage = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-                    const isHighest = item.value === maxValue && maxValue > 0;
-                    const isAboveAvg = item.value > avgValue;
+                {/* Eixo Y */}
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingBottom: '2rem', color: 'var(--text-secondary)', fontSize: '0.7rem' }}>
+                    {yAxisLabels.map((label, index) => (
+                        <span key={index}>{label}</span>
+                    ))}
+                </div>
 
-                    return (
-                        <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', position: 'relative', zIndex: 2 }}>
-                            <div style={{
-                                width: '100%',
-                                height: `${Math.max(percentage, 3)}%`,
-                                background: isHighest
-                                    ? 'linear-gradient(180deg, var(--primary-light), var(--primary-main))'
-                                    : isAboveAvg
-                                        ? 'linear-gradient(180deg, var(--secondary-light), var(--secondary-main))'
-                                        : 'linear-gradient(180deg, #cbd5e1, #94a3b8)',
-                                borderRadius: '6px 6px 0 0',
-                                position: 'relative',
-                                transition: 'all 0.3s ease',
-                                cursor: 'pointer',
-                                boxShadow: isHighest ? '0 4px 12px rgba(18, 182, 138, 0.3)' : 'none'
-                            }}
-                                title={`${item.value} ${item.value === 1 ? 'venda' : 'vendas'}`}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'scaleY(1.05)';
-                                    e.currentTarget.style.filter = 'brightness(1.1)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'scaleY(1)';
-                                    e.currentTarget.style.filter = 'brightness(1)';
-                                }}
-                            >
-                                {item.value > 0 && (
+                {/* Área de Plotagem */}
+                <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'flex-end', paddingBottom: '2rem' }}>
+
+                    {/* Linhas de Grade de Fundo */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', zIndex: 0 }}>
+                        {yAxisLabels.map((_, index) => (
+                            <div key={index} style={{ width: '100%', height: '1px', backgroundColor: index === steps ? 'transparent' : '#f1f5f9' }} />
+                        ))}
+                    </div>
+
+                    {/* Linha de Média */}
+                    {avgValue > 0 && (
+                        <div style={{
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            bottom: `calc(2rem + ${(avgValue / maxValue) * 100 * (250 - 32) / 250}px)`, // Ajuste aproximado
+                            height: '1px',
+                            borderTop: '2px dashed var(--status-warning)',
+                            zIndex: 1,
+                            opacity: 0.7
+                        }} title={`Média: ${Math.round(avgValue)}`} />
+                    )}
+
+                    {/* Barras */}
+                    <div style={{ display: 'flex', width: '100%', alignItems: 'flex-end', justifyContent: 'space-around', height: '100%', zIndex: 2 }}>
+                        {chartData.map((item, index) => {
+                            const percentage = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+
+                            return (
+                                <div key={index} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', maxWidth: '60px' }}>
+
+                                    {/* A Barra */}
+                                    <div style={{
+                                        width: '60%',
+                                        height: `${percentage}%`,
+                                        minHeight: item.value > 0 ? '4px' : '0',
+                                        background: 'var(--primary-main)',
+                                        borderRadius: '4px 4px 0 0',
+                                        transition: 'height 0.5s ease',
+                                        cursor: 'pointer',
+                                        position: 'relative'
+                                    }}
+                                        title={`${item.label}: ${item.value} vendas`}
+                                    >
+                                        {/* Tooltip on Hover (simples) */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '-25px',
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            background: '#1e293b',
+                                            color: 'white',
+                                            padding: '2px 6px',
+                                            borderRadius: '4px',
+                                            fontSize: '0.7rem',
+                                            whiteSpace: 'nowrap',
+                                            opacity: 0,
+                                            transition: 'opacity 0.2s',
+                                            pointerEvents: 'none'
+                                        }} className="chart-tooltip">
+                                            {item.value}
+                                        </div>
+                                    </div>
+
+                                    {/* Label X */}
                                     <span style={{
                                         position: 'absolute',
-                                        top: '-22px',
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
+                                        bottom: 0,
                                         fontSize: '0.7rem',
-                                        fontWeight: 600,
-                                        color: isHighest ? 'var(--primary-main)' : 'var(--text-secondary)',
+                                        color: 'var(--text-secondary)',
+                                        marginTop: '0.5rem',
                                         whiteSpace: 'nowrap',
-                                        background: 'white',
-                                        padding: '2px 4px',
-                                        borderRadius: '4px'
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        width: '100%',
+                                        textAlign: 'center'
                                     }}>
-                                        {item.value}
+                                        {item.label}
                                     </span>
-                                )}
-                            </div>
-                            <span style={{
-                                fontSize: '0.7rem',
-                                color: isHighest ? 'var(--primary-main)' : 'var(--text-secondary)',
-                                fontWeight: isHighest ? 600 : 400,
-                                textAlign: 'center'
-                            }}>
-                                {item.label}
-                            </span>
-                        </div>
-                    );
-                })}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
+
+            <style>
+                {`
+                .chart-tooltip { opacity: 0; }
+                div:hover > .chart-tooltip { opacity: 1; }
+                `}
+            </style>
 
             {/* Estatísticas */}
             <div style={{
