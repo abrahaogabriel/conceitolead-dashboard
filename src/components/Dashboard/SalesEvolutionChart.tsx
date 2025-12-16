@@ -221,7 +221,7 @@ export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales 
                             allowDecimals={false} // Evita decimais (0.5 vendas)
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(241, 245, 249, 0.4)' }} />
-                        <ReferenceLine y={avgValue} stroke="#f59e0b" strokeDasharray="3 3" />
+                        {/* <ReferenceLine y={avgValue} stroke="#f59e0b" strokeDasharray="3 3" /> */}
                         <Bar
                             dataKey="value"
                             radius={[4, 4, 0, 0]}

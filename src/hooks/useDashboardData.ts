@@ -94,109 +94,7 @@ export const useDashboardData = () => {
         clientId: ''
     });
 
-    useEffect(() => {
-        if (!authLoading) {
-            if (user && profile) {
-                fetchDashboardData();
-            } else {
-                console.log("No authenticated profile found or auth loading finished. Loading mock data.");
-                loadMockData();
-            }
-        }
-    }, [user, profile, authLoading, filters]); // Re-fetch when filters change
-
-    const filterMockData = (data: Sale[]) => {
-        return data.filter(sale => {
-            const saleDate = sale.sale_date.split('T')[0];
-            const matchesDate = saleDate >= filters.startDate && saleDate <= filters.endDate;
-            const matchesClient = filters.clientId ? sale.client_id === filters.clientId : true;
-            return matchesDate && matchesClient;
-        });
-    };
-
-    const loadMockData = () => {
-        const filtered = filterMockData(MOCK_SALES);
-        setSales(filtered);
-        // Mock calculation doesn't have real clients to lookup percentage, keeps old simple logic for mock
-        const totalSales = filtered.length;
-        const totalRevenue = filtered.reduce((acc, curr) => acc + Number(curr.amount), 0);
-        // Mock commission logic (just sum)
-        const totalCommission = filtered.reduce((acc, curr) => acc + (Number(curr.commission) || 0), 0);
-        const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
-
-        setMetrics({ totalSales, totalRevenue, totalCommission, averageTicket });
-        calculateTopProducts(filtered);
-        // calculateMonthlyEvolution(filtered); -- Removed
-        calculateTopClients(filtered); // Empty clients for mock
-        setLoading(false);
-    };
-
-    const fetchDashboardData = async () => {
-        try {
-            setLoading(true);
-
-            let query = supabase.from('sales').select('*');
-
-            // Role-based constraints
-            if (profile?.role === 'client') {
-                query = query.eq('client_id', profile.client_id!);
-            }
-
-            // Apply UI filters
-            if (filters.clientId && profile?.role !== 'client') {
-                query = query.eq('client_id', filters.clientId);
-            }
-
-            if (filters.startDate) {
-                query = query.gte('sale_date', `${filters.startDate}T00:00:00`);
-            }
-            if (filters.endDate) {
-                query = query.lte('sale_date', `${filters.endDate}T23:59:59`);
-            }
-
-            const { data: salesData, error: salesError } = await query;
-
-            if (salesError) {
-                console.error('Info: Error fetching sales, using mock data.', salesError);
-                loadMockData();
-                return;
-            }
-
-            // Fetch all clients to get their commission rates and monthly fees
-            const { data: clientsData } = await supabase.from('clients').select('id, commission_rate, monthly_fee, active');
-            const clientRates = new Map<string, { rate: number, fee: number }>();
-
-            if (clientsData) {
-                clientsData.forEach((c: any) => {
-                    clientRates.set(c.id, {
-                        rate: c.commission_rate || 0,
-                        fee: c.monthly_fee || 0
-                    });
-                });
-            }
-
-            if (!salesData || salesData.length === 0) {
-                if (!filters.clientId) {
-                    console.log("Info: No sales found query empty.");
-                }
-            }
-
-            const finalSales = (salesData as Sale[]) || [];
-
-            setSales(finalSales);
-            // Pass clientsData (allClients) to calculateMetrics
-            calculateMetrics(finalSales, clientRates, clientsData || []);
-            calculateTopProducts(finalSales);
-            // calculateMonthlyEvolution(finalSales); -- Removed
-            calculateTopClients(finalSales);
-            setLoading(false);
-
-        } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-            loadMockData();
-        }
-    };
-
+    // 1. Definições de Funções de Cálculo (antes de serem usadas)
     const calculateMetrics = (data: Sale[], clientRates: Map<string, { rate: number, fee: number }>, allClients: any[]) => {
         const totalSales = data.length;
         const totalRevenue = data.reduce((acc, curr) => acc + Number(curr.amount), 0);
@@ -281,10 +179,9 @@ export const useDashboardData = () => {
         setTopProducts(sorted);
     };
 
-    // const calculateMonthlyEvolution = ... Removed
-
     const calculateTopClients = async (data: Sale[]) => {
-        const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+        // Paleta baseada no Azul Conceito Lead (#04192A)
+        const colors = ['#04192A', '#134061', '#226898', '#3192D0', '#41BCFF'];
         const clientMap = new Map<string, number>();
 
         data.forEach(sale => {
@@ -313,12 +210,114 @@ export const useDashboardData = () => {
         setTopClients(sorted);
     };
 
+    // 2. Funções de Carregamento (usando as de cálculo)
+    const filterMockData = (data: Sale[]) => {
+        return data.filter(sale => {
+            const saleDate = sale.sale_date.split('T')[0];
+            const matchesDate = saleDate >= filters.startDate && saleDate <= filters.endDate;
+            const matchesClient = filters.clientId ? sale.client_id === filters.clientId : true;
+            return matchesDate && matchesClient;
+        });
+    };
+
+    const loadMockData = () => {
+        const filtered = filterMockData(MOCK_SALES);
+        setSales(filtered);
+        const totalSales = filtered.length;
+        const totalRevenue = filtered.reduce((acc, curr) => acc + Number(curr.amount), 0);
+        const totalCommission = filtered.reduce((acc, curr) => acc + (Number(curr.commission) || 0), 0);
+        const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+        setMetrics({ totalSales, totalRevenue, totalCommission, averageTicket });
+        calculateTopProducts(filtered);
+        calculateTopClients(filtered);
+        setLoading(false);
+    };
+
+    const fetchDashboardData = async () => {
+        try {
+            // FIX: Só mostra loading se não tiver dados carregados para evitar blink
+            if (sales.length === 0) setLoading(true);
+
+            let query = supabase.from('sales').select('*');
+
+            // Role-based constraints
+            if (profile?.role === 'client') {
+                query = query.eq('client_id', profile.client_id!);
+            }
+
+            // Apply UI filters
+            if (filters.clientId && profile?.role !== 'client') {
+                query = query.eq('client_id', filters.clientId);
+            }
+
+            if (filters.startDate) {
+                query = query.gte('sale_date', `${filters.startDate}T00:00:00`);
+            }
+            if (filters.endDate) {
+                query = query.lte('sale_date', `${filters.endDate}T23:59:59`);
+            }
+
+            const { data: salesData, error: salesError } = await query;
+
+            if (salesError) {
+                console.error('Info: Error fetching sales, using mock data.', salesError);
+                loadMockData();
+                return;
+            }
+
+            // Fetch all clients to get their commission rates and monthly fees
+            const { data: clientsData } = await supabase.from('clients').select('id, commission_rate, monthly_fee, active');
+            const clientRates = new Map<string, { rate: number, fee: number }>();
+
+            if (clientsData) {
+                clientsData.forEach((c: any) => {
+                    clientRates.set(c.id, {
+                        rate: c.commission_rate || 0,
+                        fee: c.monthly_fee || 0
+                    });
+                });
+            }
+
+            if (!salesData || salesData.length === 0) {
+                if (!filters.clientId) {
+                    console.log("Info: No sales found query empty.");
+                }
+            }
+
+            const finalSales = (salesData as Sale[]) || [];
+
+            setSales(finalSales);
+            // Pass clientsData (allClients) to calculateMetrics
+            calculateMetrics(finalSales, clientRates, clientsData || []);
+            calculateTopProducts(finalSales);
+            // calculateMonthlyEvolution removed
+            calculateTopClients(finalSales);
+            setLoading(false);
+
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+            loadMockData();
+        }
+    };
+
+    // 3. Effect (chama fetch)
+    useEffect(() => {
+        if (!authLoading) {
+            if (user && profile) {
+                fetchDashboardData();
+            } else {
+                console.log("No authenticated profile found or auth loading finished. Loading mock data.");
+                loadMockData();
+            }
+        }
+    }, [user, profile, authLoading, filters]); // Re-fetch when filters change
+
     return {
         sales,
         metrics,
         trends,
         topProducts,
-        // monthlyEvolution,
         topClients,
         loading,
         refresh: fetchDashboardData,
