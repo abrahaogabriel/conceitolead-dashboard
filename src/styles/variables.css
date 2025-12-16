@@ -1,21 +1,24 @@
 :root {
-  /* Colors - Reference: Donezo Dashboard */
-  --primary-main: #064e3b;
-  /* Deep Forest Green */
-  --primary-light: #059669;
-  /* Emerald 600 */
-  --primary-dark: #022c22;
-  /* Very Dark Green */
+  /* Colors - Conceito Lead Brand */
+  --primary-main: #0d8f6f;
+  /* Verde escuro - baseado no #12B68A */
+  --primary-light: #12B68A;
+  /* Verde Conceito Lead oficial */
+  --primary-dark: #0a6b54;
+  /* Verde mais escuro */
   --primary-contrast: #ffffff;
 
-  --secondary-main: #10b981;
-  /* Bright Emerald */
-  --secondary-light: #34d399;
-  --secondary-dark: #059669;
+  --secondary-main: #12B68A;
+  /* Verde Conceito Lead */
+  --secondary-light: #3bcaa0;
+  /* Verde claro */
+  --secondary-dark: #0d8f6f;
+  /* Verde escuro */
 
-  --accent-main: #064e3b;
-  /* Use primary for accent for now */
-  --accent-hover: #059669;
+  --accent-main: #12B68A;
+  /* Verde Conceito Lead para accent */
+  --accent-hover: #0d8f6f;
+  /* Verde escuro no hover */
 
   --background-default: #f3f4f6;
   /* Light Gray Background */
@@ -28,7 +31,8 @@
   /* Gray 500 */
   --text-disabled: #9ca3af;
 
-  --status-success: #10b981;
+  --status-success: #12B68A;
+  /* Verde Conceito Lead para sucesso */
   --status-warning: #f59e0b;
   --status-error: #ef4444;
   --status-info: #3b82f6;
