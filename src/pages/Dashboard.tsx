@@ -35,26 +35,28 @@ export const Dashboard: React.FC = () => {
     }
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1600px', margin: '0 auto', fontFamily: 'var(--font-family)' }}>
+        <div style={{ padding: '0', maxWidth: '1600px', margin: '0 auto', fontFamily: 'var(--font-family)' }}>
             <DashboardHeader filters={filters} setFilters={setFilters} clients={clients} />
 
-            <KPIGrid metrics={metrics} trends={trends} />
+            <div style={{ padding: '0 0 2rem 0' }}>
+                <KPIGrid metrics={metrics} trends={trends} />
+            </div>
 
-            {/* Visual KPIs - Charts */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+            {/* Visual KPIs - Charts - Adjusted minmax for mobile */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
                 <SalesEvolutionChart sales={sales} />
                 <ClientSalesChart data={topClients} />
             </div>
 
             {/* Middle Section */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
                 <TopProducts products={topProducts} />
                 <NextMeetingCard />
                 <RecentSales sales={sales} />
             </div>
 
             {/* Bottom Section */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
                 <TeamCard />
                 <GoalCard />
                 <ActiveClientsCard />
