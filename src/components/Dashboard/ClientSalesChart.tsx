@@ -92,23 +92,6 @@ export const ClientSalesChart: React.FC<ClientSalesChartProps> = ({ data }) => {
                     })
                 )}
             </div>
-
-            {totalSales > 0 && (
-                <div style={{
-                    marginTop: '1.5rem',
-                    padding: '0.75rem',
-                    backgroundColor: '#f8fafc',
-                    borderRadius: 'var(--radius-md)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total de vendas:</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--primary-main)' }}>
-                        {totalSales}
-                    </span>
-                </div>
-            )}
         </Card>
     );
 };
