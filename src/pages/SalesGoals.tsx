@@ -18,8 +18,8 @@ export const SalesGoals: React.FC = () => {
     const [salespeople, setSalespeople] = useState<Profile[]>([]);
     const [selectedSalespersonId, setSelectedSalespersonId] = useState<string>('');
 
-    // Estado para data estável, evitando loop infinito no useEffect
-    const [selectedMonth] = useState(new Date());
+    // Estado para data estável, com navegação
+    const [selectedMonth, setSelectedMonth] = useState(new Date());
 
     const { metrics, calendar, loading } = useGoals(selectedMonth, selectedSalespersonId || undefined);
 
@@ -30,25 +30,47 @@ export const SalesGoals: React.FC = () => {
     }, [profile]);
 
     const fetchSalespeople = async () => {
-        const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('role', 'sales')
-            .order('full_name');
+        try {
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('role', 'sales')
+                .order('full_name');
 
-        if (data) setSalespeople(data as Profile[]);
+            if (data) setSalespeople(data as Profile[]);
+        } catch (error) {
+            console.error("Erro ao buscar vendedores", error);
+        }
     };
+
+    const handlePrevMonth = () => {
+        setSelectedMonth(prev => {
+            const d = new Date(prev);
+            d.setMonth(prev.getMonth() - 1);
+            return d;
+        });
+    };
+
+    const handleNextMonth = () => {
+        setSelectedMonth(prev => {
+            const d = new Date(prev);
+            d.setMonth(prev.getMonth() + 1);
+            return d;
+        });
+    };
+
+    const monthLabel = selectedMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    const formattedMonth = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-secondary)' }}>
                 <p>Carregando metas...</p>
             </div>
         );
     }
 
     // Gerar Tiers dinamicamente baseado na meta
-    // Regra estimada do print: T1=70%, T2=100%, T3=150%, T4=200%
     const tiers = [
         { level: 'T1 (70%)', required: metrics.target * 0.7, commission: metrics.target * 0.7 * 0.007, id: 'T1' },
         { level: 'T2 (100%)', required: metrics.target * 1.0, commission: metrics.target * 1.0 * 0.008, id: 'T2' },
@@ -60,7 +82,8 @@ export const SalesGoals: React.FC = () => {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* Header com Navegação e Filtros */}
+            <div className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
                 <div>
                     <h1 className={styles.title}>
                         {profile?.role === 'admin'
@@ -70,29 +93,40 @@ export const SalesGoals: React.FC = () => {
                     <p style={{ color: 'var(--text-secondary)' }}>Acompanhe seu desempenho mensal e atingimento de níveis.</p>
                 </div>
 
-                {profile?.role === 'admin' && (
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        <select
-                            value={selectedSalespersonId}
-                            onChange={(e) => setSelectedSalespersonId(e.target.value)}
-                            style={{
-                                padding: '0.5rem 1rem',
-                                borderRadius: 'var(--radius-md)',
-                                border: '1px solid var(--border-color)',
-                                fontSize: '0.875rem'
-                            }}
-                        >
-                            <option value="">Visão Geral (Todos)</option>
-                            <optgroup label="Vendedores">
-                                {salespeople.map(person => (
-                                    <option key={person.id} value={person.id}>
-                                        {person.full_name || person.email}
-                                    </option>
-                                ))}
-                            </optgroup>
-                        </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {/* Navegador de Mês */}
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'white', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '0.25rem' }}>
+                        <button onClick={handlePrevMonth} style={{ padding: '0.5rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontWeight: 'bold' }}>&lt;</button>
+                        <span style={{ padding: '0 0.5rem', fontWeight: 600, minWidth: '140px', textAlign: 'center', color: 'var(--text-primary)', textTransform: 'capitalize' }}>{monthLabel}</span>
+                        <button onClick={handleNextMonth} style={{ padding: '0.5rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontWeight: 'bold' }}>&gt;</button>
                     </div>
-                )}
+
+                    {profile?.role === 'admin' && (
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <select
+                                value={selectedSalespersonId}
+                                onChange={(e) => setSelectedSalespersonId(e.target.value)}
+                                style={{
+                                    padding: '0.6rem 1rem',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px solid var(--border-color)',
+                                    fontSize: '0.875rem',
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="">Visão Geral (Todos)</option>
+                                <optgroup label="Vendedores">
+                                    {salespeople.map(person => (
+                                        <option key={person.id} value={person.id}>
+                                            {person.full_name || person.email}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            </select>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Top KPIs */}
@@ -143,7 +177,79 @@ export const SalesGoals: React.FC = () => {
                 </div>
             </div>
 
-            {/* Tiers / Níveis */}
+            {/* Calendário (Bloco Movido para Cima) */}
+            <div className={styles.tierSection}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <CalendarIcon size={20} color="var(--primary-main)" />
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Ritmo Diário (Pacing)</h3>
+                </div>
+
+                <div className={styles.calendarGrid}>
+                    {weekDays.map(d => (
+                        <div key={d} className={styles.headerCell}>{d}</div>
+                    ))}
+
+                    {Array.from({ length: new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1).getDay() }).map((_, i) => (
+                        <div key={`empty-${i}`} className={styles.dayCell} style={{ background: '#f9fafb' }} />
+                    ))}
+
+                    {calendar.map((day) => {
+                        // Lógica de Cor: 
+                        // Se for fim de semana: cinza.
+                        // Se passado e tiver targetValue: 
+                        //    Bateu meta (>= target): Verde
+                        //    Não bateu (< target): Vermelho
+                        // Se futuro: padrão (azul ou cinza escuro)
+                        let valueColor = 'var(--text-secondary)';
+
+                        if (day.isPast && !day.isWeekend && day.targetValue) {
+                            valueColor = day.value >= day.targetValue ? '#10b981' : '#ef4444';
+                        } else if (!day.isPast && !day.isWeekend) {
+                            valueColor = 'var(--primary-main)'; // Projected values in blueish
+                        }
+
+                        return (
+                            <div
+                                key={day.day}
+                                className={`${styles.dayCell} ${day.isToday ? styles.todayCell : ''}`}
+                                style={{ background: day.isWeekend ? '#fafafa' : 'white', position: 'relative' }}
+                            >
+                                <span className={styles.dayNumber}>{day.day}</span>
+                                <div style={{ marginTop: 'auto' }}>
+                                    {day.isWeekend ? (
+                                        <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>-</span>
+                                    ) : (
+                                        <>
+                                            {/* Exibe "Meta: R$ XXX" se for dia passado e útil */}
+                                            {day.isPast && day.targetValue ? (
+                                                <span style={{ fontSize: '0.6rem', display: 'block', color: '#94a3b8', marginBottom: '2px' }}>
+                                                    Meta: {new Intl.NumberFormat('pt-BR', { notation: 'compact', style: 'currency', currency: 'BRL' }).format(day.targetValue)}
+                                                </span>
+                                            ) : (
+                                                <span style={{ fontSize: '0.65rem', display: 'block', color: 'var(--text-secondary)' }}>
+                                                    {day.isPast ? 'Realizado' : 'Meta'}
+                                                </span>
+                                            )}
+
+                                            <span
+                                                className={styles.dayValue}
+                                                style={{
+                                                    color: valueColor,
+                                                    fontWeight: (day.isPast && !day.isWeekend) ? 700 : 500
+                                                }}
+                                            >
+                                                {formatCurrency(day.value)}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Tiers / Níveis (Bloco Movido para Baixo) */}
             <div className={styles.tierSection}>
                 <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Progresso de Níveis</h3>
                 <table className={styles.tierTable}>
@@ -182,49 +288,6 @@ export const SalesGoals: React.FC = () => {
                         })}
                     </tbody>
                 </table>
-            </div>
-
-            {/* Calendário */}
-            <div className={styles.tierSection}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                    <CalendarIcon size={20} color="var(--primary-main)" />
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Ritmo Diário (Pacing)</h3>
-                </div>
-
-                <div className={styles.calendarGrid}>
-                    {weekDays.map(d => (
-                        <div key={d} className={styles.headerCell}>{d}</div>
-                    ))}
-
-                    {/* Padding para começar no dia da semana correto */}
-                    {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
-                        <div key={`empty-${i}`} className={styles.dayCell} style={{ background: '#f9fafb' }} />
-                    ))}
-
-                    {calendar.map((day) => (
-                        <div
-                            key={day.day}
-                            className={`${styles.dayCell} ${day.isToday ? styles.todayCell : ''}`}
-                            style={{ background: day.isWeekend ? '#fafafa' : 'white' }}
-                        >
-                            <span className={styles.dayNumber}>{day.day}</span>
-                            <div style={{ marginTop: 'auto' }}>
-                                {day.isWeekend ? (
-                                    <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>-</span>
-                                ) : (
-                                    <>
-                                        <span style={{ fontSize: '0.65rem', display: 'block', color: 'var(--text-secondary)' }}>
-                                            {day.isPast ? 'Realizado' : 'Meta'}
-                                        </span>
-                                        <span className={`${styles.dayValue} ${day.isPast ? styles.pastValue : styles.futureValue}`}>
-                                            {formatCurrency(day.value)}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
             </div>
 
             {/* Utm Info Footer */}

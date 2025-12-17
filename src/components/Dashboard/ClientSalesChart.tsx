@@ -27,7 +27,7 @@ export const ClientSalesChart: React.FC<ClientSalesChartProps> = ({ data }) => {
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                    background: 'linear-gradient(135deg, var(--primary-light), var(--primary-main))',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

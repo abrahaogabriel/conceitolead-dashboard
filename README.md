@@ -1,73 +1,97 @@
-# React + TypeScript + Vite
+# 🚀 Conceito Lead Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Bem-vindo ao repositório do **Hub Conceito Lead**.
+Este projeto é a plataforma central de operações da **Conceito Lead**, focada em gestão de performance comercial, controle de acesso de clientes e visualização de dados estratégicos.
 
-Currently, two official plugins are available:
+> **Para AIs e Devs:** Este documento serve como o "Source of Truth" sobre o propósito, arquitetura e regras de negócio do sistema.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🏢 Sobre a Conceito Lead (Business Context)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+A **Conceito Lead** opera gerenciando clientes e performance de vendas. O Dashboard serve três propósitos principais:
+1.  **Gestão de Vendas (Gamificação):** Permitir que vendedores acompanhem suas metas diárias, comissões ("Níveis") e pacing de vendas em tempo real.
+2.  **Gestão de Acessos:** Centralizar credenciais e acessos de clientes de forma segura.
+3.  **Visão Administrativa:** Permitir que gestores acompanhem o macro (equipe) e o micro (individual) de cada vendedor.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Stack Tecnológica
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+O projeto foi construído utilizando tecnologias modernas visando performance e escalabilidade:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+*   **Frontend Framework:** React 18 + Vite.
+*   **Linguagem:** TypeScript (Strict Mode).
+*   **Backend / Database:** [Supabase](https://supabase.com) (PostgreSQL + Auth + Edge Functions).
+*   **Estilização:** CSS Modules (Scultped CSS) + Variáveis CSS Globais (Tema Verde/Dark).
+*   **Bibliotecas Chave:**
+    *   `recharts`: Para visualização de dados (Gráficos de evolução, pizza).
+    *   `lucide-react`: Ícones consistentes.
+    *   `date-fns` (ou nativo `Intl`): Manipulação de datas e moedas.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🔑 Estrutura e Funcionalidades
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 1. Autenticação e Perfis (Supabase Auth)
+O sistema utiliza **Role-Based Access Control (RBAC)** via tabela `profiles`:
+*   **`admin`**: Acesso total (Ver todos os vendedores, editar usuários, ver financeiro global).
+*   **`sales`** (Vendedor): Vê apenas suas próprias metas, leads e comissões.
+*   **`client`** (Cliente): Acesso restrito a dashboards de visualização (em desenvolvimento).
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 2. Página de Metas (`/sales-goals` | `SalesGoals.tsx`)
+O coração da gamificação comercial.
+*   **Conceito de Pacing:** A meta não é estática. 
+    *   *Dias Passados:* Mostra a meta que deveria ter sido cumprida (Estática). Se bateu = Verde, Se não = Vermelho.
+    *   *Hoje:* Mostra uma meta fixa calculada no início do dia (Saldo Restante / Dias Restantes).
+    *   *Futuro:* Mostra a projeção dinâmica necessária para alcançar o objetivo no fim do mês (Bola de Neve).
+*   **Níveis (Tiers):** Sistema de comissões progressivas (T1=0.9%, T2=1.0%... até T4=1.5%) baseado na % da meta atingida.
+*   **Filtro Admin:** Administradores podem filtrar a visão por vendedor específico ou ver o acumulado geral.
+
+### 3. Dashboard Principal (`/` | `Dashboard.tsx`)
+Visão geral rápida com "Top Clientes" e atalhos para funcionalidades frequentes.
+
+### 4. Gestão de Acessos (`/access-data`)
+CRUD seguro para armazenar logins e senhas de ferramentas dos clientes.
+
+---
+
+## 🎨 Design System e UI
+
+A identidade visual é **Premium e Corporativa**, com foco na cor **Verde Conceito Lead** (`#10b981` primary).
+*   **Regra de Ouro:** Evitar interfaces genéricas. Usar sombras suaves, bords radius consistentes e tipografia limpa (Inter/Roboto).
+*   **Feedback Visual:** O uso de cores (Verde/Vermelho) deve ser semântico para indicar sucesso ou atenção nas metas.
+
+---
+
+## ⚙️ Configuração Local
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone <repo-url>
+    ```
+2.  **Instale dependências:**
+    ```bash
+    npm install
+    ```
+3.  **Configuração de Ambiente (.env):**
+    Crie um arquivo `.env` na raiz com as chaves do Supabase:
+    ```env
+    VITE_SUPABASE_URL=seu_supabase_url
+    VITE_SUPABASE_ANON_KEY=sua_anon_key
+    ```
+4.  **Execute:**
+    ```bash
+    npm run dev
+    ```
+
+---
+
+## 📝 Próximos Passos (Backlog)
+
+*   Refinar visualização de níveis (Cores e badges).
+*   Implementar gráfico de evolução diária de vendas (Barras).
+*   Expansão da área de clientes (Visualização de contratos).
+
+---
+*Documentação gerada pela IA Antigravity - Dezembro/2025*
