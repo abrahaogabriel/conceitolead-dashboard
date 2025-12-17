@@ -1,22 +1,33 @@
 import React from 'react';
 import { Card } from '../UI/Card';
 import type { Sale } from '../../types';
+import { useNavigate } from 'react-router-dom';
 
 interface RecentSalesProps {
     sales: Sale[];
 }
 
 export const RecentSales: React.FC<RecentSalesProps> = ({ sales }) => {
+    const navigate = useNavigate();
+
     return (
         <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
                 <h3 style={{ fontSize: '1.125rem' }}>Últimas Vendas</h3>
-                <button style={{
-                    fontSize: '0.875rem',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '99px',
-                    border: '1px solid var(--border-color)'
-                }}>+ Nova</button>
+                <button
+                    onClick={() => navigate('/sales')}
+                    style={{
+                        fontSize: '0.875rem',
+                        padding: '0.25rem 0.75rem',
+                        color: 'var(--primary-main)',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                    }}
+                >
+                    Ver todas &rarr;
+                </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {sales.length === 0 ? (

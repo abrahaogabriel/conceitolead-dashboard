@@ -7,7 +7,7 @@ import { DashboardHeader } from '../components/Dashboard/DashboardHeader';
 import { KPIGrid } from '../components/Dashboard/KPIGrid';
 import { TopProducts } from '../components/Dashboard/TopProducts';
 import { RecentSales } from '../components/Dashboard/RecentSales';
-import { NextMeetingCard, TeamCard, GoalCard, ActiveClientsCard } from '../components/Dashboard/SideCards';
+import { TeamCard, GoalCard } from '../components/Dashboard/SideCards';
 import { SalesEvolutionChart } from '../components/Dashboard/SalesEvolutionChart';
 import { ClientSalesChart } from '../components/Dashboard/ClientSalesChart';
 
@@ -49,17 +49,16 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Middle Section */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+            {/* Middle Section - Grid 2x2 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
                 <TopProducts products={topProducts} />
-                <NextMeetingCard />
                 <RecentSales sales={sales} />
             </div>
 
-            {/* Bottom Section */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+            {/* Bottom Section - Grid 2x2 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
                 <TeamCard />
                 <GoalCard />
-                <ActiveClientsCard />
             </div>
         </div>
     );
