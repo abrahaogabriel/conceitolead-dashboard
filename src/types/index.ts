@@ -15,6 +15,7 @@ export interface Profile {
     email?: string; // Added field
     role: 'admin' | 'sales' | 'client';
     client_id?: string;
+    utm_code?: string;
     created_at: string;
 }
 
