@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { Card } from '../UI/Card';
-import { TrendingUp, Award } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import {
     BarChart,
     Bar,
@@ -60,7 +59,6 @@ export const DailySalesChart: React.FC<DailySalesChartProps> = ({ sales }) => {
     }, [sales]);
 
     const maxValue = Math.max(...chartData.map(d => d.value), 1);
-    const avgValue = chartData.reduce((acc, d) => acc + d.value, 0) / chartData.length;
 
     // Custom Tooltip
     const CustomTooltip = ({ active, payload, label }: any) => {

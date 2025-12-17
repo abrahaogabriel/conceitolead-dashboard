@@ -180,7 +180,6 @@ export const useGoals = (selectedMonth: Date = new Date(), selectedSalespersonId
 
             const isPast = checkDate < todayRef;
             const isToday = checkDate.getTime() === todayRef.getTime();
-            const isFuture = checkDate > todayRef;
 
             // 1. Calcular a Meta Deste Dia (Baseada no saldo INICIAL do dia)
             let dailyGoal = 0;

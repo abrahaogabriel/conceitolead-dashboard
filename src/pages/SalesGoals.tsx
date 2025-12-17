@@ -61,7 +61,6 @@ export const SalesGoals: React.FC = () => {
     };
 
     const monthLabel = selectedMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    const formattedMonth = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
 
     if (loading) {
         return (
