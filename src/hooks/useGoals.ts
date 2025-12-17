@@ -7,7 +7,7 @@ export interface GoalsMetrics {
     target: number;
     achieved: number;
     percentage: number;
-    currentTier: 'T0' | 'T1' | 'T2' | 'T3' | 'T4';
+    currentTier: 'T1' | 'T2' | 'T3' | 'T4';
     daysLeft: number;
     dailyRequired: number;
     projected: number;
@@ -33,7 +33,7 @@ export const useGoals = (selectedMonth: Date = new Date(), selectedSalespersonId
         target: 0,
         achieved: 0,
         percentage: 0,
-        currentTier: 'T0',
+        currentTier: 'T1',
         daysLeft: 0,
         dailyRequired: 0,
         projected: 0
@@ -120,11 +120,10 @@ export const useGoals = (selectedMonth: Date = new Date(), selectedSalespersonId
         const achieved = salesData.reduce((acc, curr) => acc + Number(curr.amount), 0);
         const percentage = target > 0 ? (achieved / target) * 100 : 0;
 
-        let currentTier: GoalsMetrics['currentTier'] = 'T0';
+        let currentTier: GoalsMetrics['currentTier'] = 'T1';
         if (percentage >= 200) currentTier = 'T4';
         else if (percentage >= 150) currentTier = 'T3';
         else if (percentage >= 100) currentTier = 'T2';
-        else if (percentage >= 70) currentTier = 'T1';
 
         const today = new Date();
         const daysInMonth = new Date(year, month, 0).getDate();

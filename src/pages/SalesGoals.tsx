@@ -5,6 +5,7 @@ import { Target, Trophy, TrendingUp, Calendar as CalendarIcon } from 'lucide-rea
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import type { Profile } from '../types';
+import { DailySalesChart } from '../components/Dashboard/DailySalesChart';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -21,7 +22,7 @@ export const SalesGoals: React.FC = () => {
     // Estado para data estável, com navegação
     const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-    const { metrics, calendar, loading } = useGoals(selectedMonth, selectedSalespersonId || undefined);
+    const { metrics, calendar, loading, sales } = useGoals(selectedMonth, selectedSalespersonId || undefined);
 
     useEffect(() => {
         if (profile?.role === 'admin') {
@@ -71,11 +72,12 @@ export const SalesGoals: React.FC = () => {
     }
 
     // Gerar Tiers dinamicamente baseado na meta
+    // nivel 1 - 0,9%; nivel 2 - 1%; nivel 3 - 1,2%; nivel 4 1,5%.
     const tiers = [
-        { level: 'T1 (70%)', required: metrics.target * 0.7, commission: metrics.target * 0.7 * 0.007, id: 'T1' },
-        { level: 'T2 (100%)', required: metrics.target * 1.0, commission: metrics.target * 1.0 * 0.008, id: 'T2' },
-        { level: 'T3 (150%)', required: metrics.target * 1.5, commission: metrics.target * 1.5 * 0.011, id: 'T3' },
-        { level: 'T4 (200%)', required: metrics.target * 2.0, commission: metrics.target * 2.0 * 0.024, id: 'T4' },
+        { level: 'T1 (70%)', required: metrics.target * 0.7, commission: metrics.target * 0.7 * 0.009, id: 'T1', rate: '0.9%' },
+        { level: 'T2 (100%)', required: metrics.target * 1.0, commission: metrics.target * 1.0 * 0.010, id: 'T2', rate: '1.0%' },
+        { level: 'T3 (150%)', required: metrics.target * 1.5, commission: metrics.target * 1.5 * 0.012, id: 'T3', rate: '1.2%' },
+        { level: 'T4 (200%)', required: metrics.target * 2.0, commission: metrics.target * 2.0 * 0.015, id: 'T4', rate: '1.5%' },
     ];
 
     const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -177,7 +179,10 @@ export const SalesGoals: React.FC = () => {
                 </div>
             </div>
 
-            {/* Calendário (Bloco Movido para Cima) */}
+            {/* Gráfico de Evolução Diária */}
+            <DailySalesChart sales={sales} />
+
+            {/* Calendário */}
             <div className={styles.tierSection}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                     <CalendarIcon size={20} color="var(--primary-main)" />
@@ -222,11 +227,11 @@ export const SalesGoals: React.FC = () => {
                                         <>
                                             {/* Exibe "Meta: R$ XXX" se for dia passado e útil */}
                                             {day.isPast && day.targetValue ? (
-                                                <span style={{ fontSize: '0.6rem', display: 'block', color: '#94a3b8', marginBottom: '2px' }}>
+                                                <span style={{ fontSize: '0.6rem', display: 'block', color: '#94a3b8', marginBottom: '2px', fontWeight: 500 }}>
                                                     Meta: {new Intl.NumberFormat('pt-BR', { notation: 'compact', style: 'currency', currency: 'BRL' }).format(day.targetValue)}
                                                 </span>
                                             ) : (
-                                                <span style={{ fontSize: '0.65rem', display: 'block', color: 'var(--text-secondary)' }}>
+                                                <span style={{ fontSize: '0.65rem', display: 'block', color: 'var(--text-secondary)', fontWeight: 600 }}>
                                                     {day.isPast ? 'Realizado' : 'Meta'}
                                                 </span>
                                             )}
@@ -249,38 +254,46 @@ export const SalesGoals: React.FC = () => {
                 </div>
             </div>
 
-            {/* Tiers / Níveis (Bloco Movido para Baixo) */}
+            {/* Tiers / Níveis */}
             <div className={styles.tierSection}>
                 <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Progresso de Níveis</h3>
                 <table className={styles.tierTable}>
                     <thead>
                         <tr>
-                            <th>Nível</th>
+                            <th>Nível / Taxa</th>
                             <th>Faturamento Necessário</th>
                             <th>Comissão Estimada</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {tiers.map((tier) => {
+                        {tiers.map((tier, index) => {
                             const isActive = metrics.currentTier === tier.id;
                             const isPassed = metrics.achieved >= tier.required;
+                            const isNext = !isPassed && (index === 0 || metrics.achieved >= tiers[index - 1].required);
 
                             return (
-                                <tr key={tier.id} className={isActive ? styles.activeRow : ''} style={{ opacity: isPassed || isActive ? 1 : 0.6 }}>
+                                <tr key={tier.id} className={isActive ? styles.activeRow : ''}>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            {tier.level}
-                                            {isActive && <span style={{ fontSize: '0.7rem', background: 'white', color: 'var(--primary-main)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>ATUAL</span>}
+                                            <span style={{ fontWeight: 600 }}>{tier.level}</span>
+                                            <span style={{ fontSize: '0.75rem', color: isActive ? 'var(--primary-main)' : 'var(--text-secondary)', fontWeight: 500 }}>
+                                                ({tier.rate})
+                                            </span>
+                                            {isActive && <span style={{ fontSize: '0.7rem', background: 'var(--primary-main)', color: 'white', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>ATUAL</span>}
                                         </div>
                                     </td>
                                     <td>{formatCurrency(tier.required)}</td>
                                     <td>{formatCurrency(tier.commission)}</td>
                                     <td>
                                         {isPassed ? (
-                                            <span style={{ color: isActive ? 'white' : 'var(--status-success)', fontWeight: 700 }}>Conquistado</span>
+                                            <span style={{ color: 'var(--status-success)', fontWeight: 700 }}>
+                                                Conquistado
+                                            </span>
+                                        ) : isNext ? (
+                                            <span style={{ color: 'var(--primary-main)', fontWeight: 600 }}>Em andamento</span>
                                         ) : (
-                                            <span style={{ fontSize: '0.875rem' }}>Em andamento</span>
+                                            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', opacity: 0.6 }}>Aguardando</span>
                                         )}
                                     </td>
                                 </tr>

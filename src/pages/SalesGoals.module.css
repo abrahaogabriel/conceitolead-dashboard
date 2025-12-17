@@ -49,25 +49,26 @@
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
 }
 
 .tierTable th {
     font-size: 0.875rem;
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
 }
 
 .activeRow {
-    background-color: var(--primary-light);
-    color: white;
-    font-weight: 600;
+    background-color: #dcfce7;
+    /* Green-100 equivalent */
+    border-left: 4px solid var(--primary-main);
 }
 
 .activeRow td {
-    color: white;
-    /* Ensure text visible on dark/primary background */
-    border-bottom: none;
+    color: var(--text-primary);
+    font-weight: 600;
+    border-bottom: 1px solid var(--primary-light);
 }
 
 .calendarGrid {
@@ -92,10 +93,10 @@
 .headerCell {
     background: #f8fafc;
     padding: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .dayNumber {
@@ -115,12 +116,11 @@
 
 .futureValue {
     color: var(--text-secondary);
-    opacity: 0.7;
+    opacity: 0.8;
 }
 
 .todayCell {
     background: #f0fdf4;
-    /* Light green bg */
     border: 2px solid var(--primary-main);
     z-index: 1;
 }

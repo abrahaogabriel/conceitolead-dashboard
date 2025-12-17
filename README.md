@@ -86,12 +86,4 @@ A identidade visual é **Premium e Corporativa**, com foco na cor **Verde Concei
     ```
 
 ---
-
-## 📝 Próximos Passos (Backlog)
-
-*   Refinar visualização de níveis (Cores e badges).
-*   Implementar gráfico de evolução diária de vendas (Barras).
-*   Expansão da área de clientes (Visualização de contratos).
-
----
 *Documentação gerada pela IA Antigravity - Dezembro/2025*
