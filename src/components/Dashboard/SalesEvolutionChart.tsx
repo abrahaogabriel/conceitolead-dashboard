@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '../UI/Card';
-import { TrendingUp, Calendar } from 'lucide-react';
+import { TrendingUp, Calendar, Maximize2, Minimize2 } from 'lucide-react';
+import { DailySalesChart } from './DailySalesChart';
 import {
     BarChart,
     Bar,
@@ -26,6 +27,7 @@ type Period = 'day' | 'week' | 'month' | 'quarter';
 
 export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales }) => {
     const [period, setPeriod] = useState<Period>('month');
+    const [isExpanded, setIsExpanded] = useState(false);
 
     // Lógica de processamento de dados mantida
     const chartData = useMemo(() => {
@@ -161,12 +163,54 @@ export const SalesEvolutionChart: React.FC<SalesEvolutionChartProps> = ({ sales 
         return null;
     };
 
+    if (isExpanded) {
+        return (
+            <div style={{ position: 'relative' }}>
+                <button
+                    onClick={() => setIsExpanded(false)}
+                    style={{
+                        position: 'absolute',
+                        right: '1rem',
+                        top: '1rem',
+                        zIndex: 10,
+                        background: 'white',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '0.5rem',
+                        padding: '0.5rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}
+                >
+                    <Minimize2 size={18} color="var(--text-secondary)" />
+                </button>
+                <DailySalesChart sales={sales} />
+            </div>
+        );
+    }
+
     return (
         <Card>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.25rem' }}>Evolução de Vendas</h3>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{getPeriodLabel()}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{getPeriodLabel()}</p>
+                        <button
+                            onClick={() => setIsExpanded(true)}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '0',
+                                display: 'flex',
+                                alignItems: 'center',
+                                color: 'var(--text-secondary)'
+                            }}
+                            title="Expandir para ver Faturamento Diário"
+                        >
+                            <Maximize2 size={14} />
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
