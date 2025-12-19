@@ -8,12 +8,19 @@ import { Users } from './pages/Users';
 import { Clients } from './pages/Clients';
 import { SalesGoals } from './pages/SalesGoals';
 import { Governance } from './pages/Governance';
+import { ProtectedStandaloneRoute } from './components/Layout/ProtectedStandaloneRoute';
+import { TvDashboard } from './pages/TvDashboard';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+
+        {/* TV Dashboard - Standalone (No Sidebar, Dark Theme) */}
+        <Route element={<ProtectedStandaloneRoute />}>
+          <Route path="/tv-dashboard" element={<TvDashboard />} />
+        </Route>
 
         {/* Protected Routes - Accessible by all authenticated users */}
         <Route element={<ProtectedRoute />}>
