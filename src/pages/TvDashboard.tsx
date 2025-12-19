@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Maximize, Minimize, HelpCircle, Trophy } from 'lucide-react';
+import { ArrowLeft, Maximize, Minimize, Trophy } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import styles from './TvDashboard.module.css';
 import confetti from 'canvas-confetti';
