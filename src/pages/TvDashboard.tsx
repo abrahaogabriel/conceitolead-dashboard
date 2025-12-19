@@ -4,6 +4,7 @@ import { ArrowLeft, Maximize, Minimize, HelpCircle, Trophy } from 'lucide-react'
 import { supabase } from '../services/supabase';
 import styles from './TvDashboard.module.css';
 import confetti from 'canvas-confetti';
+import logoVertical from '../assets/logo-vertical-branco.png';
 
 interface SalesPersonMetric {
     id: string;
@@ -240,7 +241,7 @@ export const TvDashboard: React.FC = () => {
 
             {/* Header */}
             <div className={styles.header}>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', justifySelf: 'start' }}>
                     <button onClick={() => navigate('/goals')} className={styles.backButton}>
                         <ArrowLeft size={16} />
                         Voltar
@@ -249,7 +250,11 @@ export const TvDashboard: React.FC = () => {
                         {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
                     </button>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+                {/* Central Logo */}
+                <img src={logoVertical} alt="Conceito Lead" className={styles.logo} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifySelf: 'end' }}>
                     <div style={{ textAlign: 'right' }}>
                         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: 'var(--primary-main)' }}>Dashboard de Vendas</h1>
                         <p style={{ margin: 0, fontSize: '0.875rem', color: '#94a3b8' }}>
