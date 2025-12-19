@@ -33,21 +33,17 @@ export const RecentSales: React.FC<RecentSalesProps> = ({ sales }) => {
                 {sales.length === 0 ? (
                     <p style={{ color: 'var(--text-secondary)' }}>Nenhuma venda recente.</p>
                 ) : (
-                    sales.slice(0, 4).map((sale) => (
-                        <div key={sale.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{
-                                width: '40px', height: '40px',
-                                borderRadius: '50%',
-                                backgroundColor: 'var(--background-default)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontWeight: 600, color: 'var(--primary-main)'
-                            }}>
-                                {sale.product_name.substring(0, 2).toUpperCase()}
-                            </div>
+                    sales.slice(0, 6).map((sale) => (
+                        <div key={sale.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
                             <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>{sale.product_name}</p>
-                                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                    {new Date(sale.sale_date).toLocaleDateString()} • {sale.status}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                    <p style={{ fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>{sale.buyer_name || 'Comprador'}</p>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                        {new Date(sale.sale_date).toLocaleDateString()} at {new Date(sale.sale_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+                                    {sale.product_name}
                                 </p>
                             </div>
                         </div>

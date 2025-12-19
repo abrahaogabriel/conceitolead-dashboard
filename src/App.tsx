@@ -10,6 +10,7 @@ import { SalesGoals } from './pages/SalesGoals';
 import { Governance } from './pages/Governance';
 import { ProtectedStandaloneRoute } from './components/Layout/ProtectedStandaloneRoute';
 import { TvDashboard } from './pages/TvDashboard';
+import { Settings } from './pages/Settings';
 
 function App() {
   return (
@@ -27,7 +28,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/sales" element={<Sales />} />
           <Route path="/goals" element={<SalesGoals />} />
-          <Route path="/settings" element={<div>Configurações</div>} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Admin Routes */}

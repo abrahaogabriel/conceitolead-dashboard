@@ -10,9 +10,9 @@ export const TeamCard: React.FC = () => {
         const fetchTeam = async () => {
             const { data } = await supabase
                 .from('profiles')
-                .select('id, full_name, role')
+                .select('id, full_name, role, avatar_url')
                 .in('role', ['sales', 'admin'])
-                .limit(3);
+                .limit(4);
 
             if (data) setTeamMembers(data);
         };
@@ -36,15 +36,20 @@ export const TeamCard: React.FC = () => {
                             width: '36px',
                             height: '36px',
                             borderRadius: '50%',
-                            background: 'linear-gradient(135deg, var(--primary-main), var(--secondary-main))',
+                            background: member.avatar_url ? 'none' : 'linear-gradient(135deg, var(--primary-main), var(--secondary-main))',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: 'white',
                             fontWeight: 600,
-                            fontSize: '0.875rem'
+                            fontSize: '0.875rem',
+                            overflow: 'hidden'
                         }}>
-                            {member.full_name?.substring(0, 2).toUpperCase() || 'AN'}
+                            {member.avatar_url ? (
+                                <img src={member.avatar_url} alt={member.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                member.full_name?.substring(0, 2).toUpperCase() || 'AN'
+                            )}
                         </div>
                         <div style={{ flex: 1 }}>
                             <p style={{ fontSize: '0.875rem', fontWeight: 500 }}>{member.full_name || 'Anônimo'}</p>

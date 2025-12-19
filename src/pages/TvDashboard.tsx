@@ -197,7 +197,7 @@ export const TvDashboard: React.FC = () => {
                 return {
                     id: p.id,
                     name: p.full_name || p.email || 'Vendedor',
-                    photo: undefined,
+                    photo: p.avatar_url,
                     target,
                     achieved,
                     percentage: target > 0 ? (achieved / target) * 100 : 0,
@@ -313,9 +313,18 @@ export const TvDashboard: React.FC = () => {
                     <div key={person.id} className={styles.salesCard}>
                         {/* Avatar & Name */}
                         <div className={styles.avatarSection}>
-                            <div className={styles.avatar}>
-                                {person.name.substring(0, 2).toUpperCase()}
-                            </div>
+                            {person.photo ? (
+                                <img
+                                    src={person.photo}
+                                    alt={person.name}
+                                    className={styles.avatar}
+                                    style={{ objectFit: 'cover' }}
+                                />
+                            ) : (
+                                <div className={styles.avatar}>
+                                    {person.name.substring(0, 2).toUpperCase()}
+                                </div>
+                            )}
                             <div className={styles.salesName}>{person.name}</div>
                         </div>
 

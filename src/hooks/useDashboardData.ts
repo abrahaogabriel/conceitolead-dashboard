@@ -174,7 +174,7 @@ export const useDashboardData = () => {
         const sorted = Array.from(productMap.entries())
             .map(([name, stats]) => ({ name, ...stats }))
             .sort((a, b) => b.revenue - a.revenue)
-            .slice(0, 5); // Top 5
+            .slice(0, 6); // Top 6
 
         setTopProducts(sorted);
     };
@@ -239,7 +239,7 @@ export const useDashboardData = () => {
             // FIX: Só mostra loading se não tiver dados carregados para evitar blink
             if (sales.length === 0) setLoading(true);
 
-            let query = supabase.from('sales').select('*');
+            let query = supabase.from('sales').select('*').order('sale_date', { ascending: false });
 
             // Role-based constraints
             if (profile?.role === 'client') {

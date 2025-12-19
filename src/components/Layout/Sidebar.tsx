@@ -65,9 +65,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
                     <div className={styles.section}>
                         <p className={styles.sectionTitle}>Configurações</p>
-                        <NavLink to="/settings" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`} title="Ajustes" onClick={onClose}>
+                        <NavLink to="/settings" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`} title="Perfil" onClick={onClose}>
                             <Settings size={20} />
-                            <span>Ajustes</span>
+                            <span>Perfil</span>
                         </NavLink>
                     </div>
                 </nav>
