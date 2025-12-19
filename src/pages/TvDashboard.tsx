@@ -15,6 +15,11 @@ interface SalesPersonMetric {
     percentage: number;
     gap: number;
     projected: number;
+    // New fields
+    dailyTarget: number;
+    todaySales: number;
+    dailyPercentage: number;
+    isDailyHit: boolean;
 }
 
 export const TvDashboard: React.FC = () => {
@@ -39,7 +44,6 @@ export const TvDashboard: React.FC = () => {
             setIsFullscreen(!!document.fullscreenElement);
         });
 
-        // Configurar Realtime
         const subscription = supabase
             .channel('tv-dashboard-sales')
             .on(
@@ -49,7 +53,6 @@ export const TvDashboard: React.FC = () => {
                     console.log('Nova venda recebida via Realtime!', payload);
                     const newSale = payload.new;
 
-                    // Identificar vendedor (opcional, para exibir no toast)
                     let sellerName = 'Alguém';
                     if (newSale.salesperson_id) {
                         const { data } = await supabase.from('profiles').select('full_name').eq('id', newSale.salesperson_id).single();
@@ -68,12 +71,10 @@ export const TvDashboard: React.FC = () => {
     }, []);
 
     const handleNewSale = (amount: number, sellerName: string) => {
-        // 1. Tocar Som
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'); // Som de 'Success Chime'
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
         audio.volume = 0.5;
         audio.play().catch(e => console.log('Audio autoplay blocked', e));
 
-        // 2. Confetes
         const duration = 3000;
         const animationEnd = Date.now() + duration;
         const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
@@ -87,13 +88,8 @@ export const TvDashboard: React.FC = () => {
             confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
         }, 250);
 
-        // 3. Mostrar Notificação Visual
         setShowNotification({ show: true, amount, sellerName });
-
-        // 4. Atualizar Dados
         fetchTvData();
-
-        // Esconder notificação após 5s
         setTimeout(() => setShowNotification(null), 5000);
     };
 
@@ -105,7 +101,6 @@ export const TvDashboard: React.FC = () => {
         }
     };
 
-    // Toggle manual
     const handleToggleFullscreen = () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen();
@@ -118,25 +113,22 @@ export const TvDashboard: React.FC = () => {
         try {
             const today = new Date();
             const year = today.getFullYear();
-            const month = today.getMonth() + 1; // 1-12
+            const month = today.getMonth() + 1;
             const startDate = new Date(year, month - 1, 1).toISOString();
             const endDate = new Date(year, month, 0, 23, 59, 59).toISOString();
 
-            // 1. Buscar Vendedores
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('*')
                 .in('role', ['sales', 'admin'])
                 .order('full_name');
 
-            // 2. Buscar Metas do Mês
             const { data: goals } = await supabase
                 .from('sales_goals')
                 .select('*')
                 .eq('month', month)
                 .eq('year', year);
 
-            // 3. Buscar Vendas do Mês
             const { data: sales } = await supabase
                 .from('sales')
                 .select('*')
@@ -146,13 +138,28 @@ export const TvDashboard: React.FC = () => {
 
             if (!profiles) return;
 
-            // Processar Dados
+            // Helper para contar dias úteis restantes (incluindo hoje se for útil)
+            const countWorkingDaysLeft = () => {
+                let count = 0;
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const currentDay = today.getDate();
+
+                for (let d = currentDay; d <= daysInMonth; d++) {
+                    const dateObj = new Date(year, month - 1, d);
+                    const dayOfWeek = dateObj.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 0=Dom, 6=Sab
+                        count++;
+                    }
+                }
+                return count;
+            };
+
+            const workingDaysLeft = countWorkingDaysLeft();
+
             const processed = profiles.map(p => {
-                // Meta
                 const userGoal = goals?.find(g => g.salesperson_id === p.id);
                 const target = userGoal ? Number(userGoal.target_amount) : 0;
 
-                // Realizado
                 const userSales = sales?.filter(s => {
                     const idMatch = s.salesperson_id === p.id;
                     const utmMatch = p.utm_code && s.utm_source && (s.utm_source.toLowerCase() === p.utm_code.toLowerCase());
@@ -160,13 +167,32 @@ export const TvDashboard: React.FC = () => {
                 }) || [];
 
                 const achieved = userSales.reduce((acc, curr) => acc + Number(curr.amount), 0);
-                // const percentage = target > 0 ? (achieved / target) * 100 : 0; // Removed unused variable
+
+                // Today Sales (Local Time Match)
+                const todayStr = today.toLocaleDateString('pt-BR');
+                const todaySalesVal = userSales
+                    .filter(s => new Date(s.sale_date).toLocaleDateString('pt-BR') === todayStr)
+                    .reduce((acc, curr) => acc + Number(curr.amount), 0);
 
                 const daysInMonth = new Date(year, month, 0).getDate();
                 const currentDay = today.getDate();
-
-                // Projeção simples linear
                 const projected = currentDay > 0 ? (achieved / currentDay) * daysInMonth : achieved;
+
+                // Daily Target Logic (Pacing)
+                // Quanto falta (tirando o que já fiz hoje, para calcular a base de "início do dia"?)
+                // Não, a lógica do calendário é: (Meta Total - RealizadoAtéOntem) / DiasÚteisRestantes
+                const achievedUntilYesterday = achieved - todaySalesVal;
+                let baseDailyTarget = 0;
+
+                if (target > 0 && workingDaysLeft > 0) {
+                    baseDailyTarget = Math.max(0, target - achievedUntilYesterday) / workingDaysLeft;
+                }
+
+                // Incentive Logic
+                const isDailyHit = todaySalesVal >= baseDailyTarget && baseDailyTarget > 0;
+                // Se bateu a meta, a "Meta Exibida" aumenta 40%
+                const displayDailyTarget = isDailyHit ? baseDailyTarget * 1.4 : baseDailyTarget;
+                const dailyPercentage = displayDailyTarget > 0 ? (todaySalesVal / displayDailyTarget) * 100 : 0;
 
                 return {
                     id: p.id,
@@ -176,19 +202,20 @@ export const TvDashboard: React.FC = () => {
                     achieved,
                     percentage: target > 0 ? (achieved / target) * 100 : 0,
                     gap: Math.max(0, target - achieved),
-                    projected
+                    projected,
+                    // Daily
+                    dailyTarget: displayDailyTarget, // Exibe a meta ajustada
+                    todaySales: todaySalesVal,
+                    dailyPercentage,
+                    isDailyHit
                 };
             });
 
-            // Filtrar apenas quem tem meta ou venda > 0
             const activeSalespeople = processed.filter(p => p.target > 0 || p.achieved > 0);
-
-            // Ordenar por % de atingimento
             activeSalespeople.sort((a, b) => b.percentage - a.percentage);
 
             setMetrics(activeSalespeople);
 
-            // Calcular Totais Globais
             const totalTarget = activeSalespeople.reduce((acc, curr) => acc + curr.target, 0);
             const totalAchieved = sales?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
 
@@ -219,7 +246,6 @@ export const TvDashboard: React.FC = () => {
 
     return (
         <div className={styles.container} ref={containerRef}>
-            {/* Notificação de Nova Venda */}
             {showNotification && (
                 <div className={styles.notificationOverlay}>
                     <div className={styles.notificationCard}>
@@ -239,7 +265,6 @@ export const TvDashboard: React.FC = () => {
                 </div>
             )}
 
-            {/* Header */}
             <div className={styles.header}>
                 <div style={{ display: 'flex', gap: '1rem', justifySelf: 'start' }}>
                     <button onClick={() => navigate('/goals')} className={styles.backButton}>
@@ -251,7 +276,6 @@ export const TvDashboard: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Central Logo */}
                 <img src={logoVertical} alt="Conceito Lead" className={styles.logo} />
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifySelf: 'end' }}>
@@ -264,7 +288,6 @@ export const TvDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Global Stats */}
             <div className={styles.globalStats}>
                 <div className={styles.statCard}>
                     <span className={styles.statTitle}>Meta Global</span>
@@ -285,7 +308,6 @@ export const TvDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Salespeople List */}
             <div className={styles.salesList}>
                 {metrics.map((person) => (
                     <div key={person.id} className={styles.salesCard}>
@@ -297,10 +319,11 @@ export const TvDashboard: React.FC = () => {
                             <div className={styles.salesName}>{person.name}</div>
                         </div>
 
-                        {/* Progress Bar Center */}
+                        {/* Progress Bars (Monthly & Daily) */}
                         <div className={styles.progressSection}>
+                            {/* Monthly */}
                             <div className={styles.progressHeader}>
-                                <span className={styles.progressLabel}>Progresso da Meta</span>
+                                <span className={styles.progressLabel}>Progresso Mensal</span>
                                 <span className={styles.progressValue}>{person.percentage.toFixed(1)}%</span>
                             </div>
                             <div className={styles.progressBarBg}>
@@ -313,14 +336,36 @@ export const TvDashboard: React.FC = () => {
                                     }}
                                 />
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>0%</span>
-                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>100%</span>
+
+                            {/* Daily */}
+                            <div className={styles.dailyProgressSection}>
+                                <div className={styles.progressHeader}>
+                                    <span className={styles.progressLabel} style={{ color: person.isDailyHit ? '#facc15' : '#94a3b8', fontWeight: person.isDailyHit ? 700 : 400 }}>
+                                        {person.isDailyHit ? 'META DO DIA BATIDA! 🔥' : 'Meta do Dia'}
+                                    </span>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <span className={styles.progressValue} style={{ fontSize: '0.875rem', color: person.isDailyHit ? '#facc15' : '#cbd5e1' }}>
+                                            {formatCurrency(person.todaySales)} / {formatCurrency(person.dailyTarget)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className={styles.dailyProgressBarBg}>
+                                    <div
+                                        className={`${styles.dailyProgressBarFill} ${person.isDailyHit ? styles.hit : ''}`}
+                                        style={{
+                                            width: `${Math.min(person.dailyPercentage, 100)}%`
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        {/* KPIs Right */}
+                        {/* KPIs Right (Updated Order: Meta - Realizado - Falta - Projeção) */}
                         <div className={styles.kpiGroup}>
+                            <div className={styles.kpiItem}>
+                                <span className={styles.kpiLabel}>META</span>
+                                <span className={styles.kpiVal} style={{ color: '#94a3b8' }}>{formatCurrency(person.target)}</span>
+                            </div>
                             <div className={styles.kpiItem}>
                                 <span className={styles.kpiLabel}>REALIZADO</span>
                                 <span className={styles.kpiVal} style={{ color: '#fff' }}>{formatCurrency(person.achieved)}</span>
@@ -329,10 +374,9 @@ export const TvDashboard: React.FC = () => {
                                 <span className={styles.kpiLabel}>FALTA</span>
                                 <span className={styles.kpiVal} style={{ color: '#f87171' }}>{formatCurrency(person.gap)}</span>
                             </div>
-                            <div className={styles.kpiItem} title="Estimativa de fechamento baseada no ritmo atual">
+                            <div className={styles.kpiItem} title="Estimativa de fechamento">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <span className={styles.kpiLabel}>PROJEÇÃO</span>
-                                    <HelpCircle size={10} color="#64748b" />
                                 </div>
                                 <span className={styles.kpiVal} style={{ color: '#38bdf8' }}>{formatCurrency(person.projected)}</span>
                             </div>

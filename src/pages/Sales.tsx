@@ -219,7 +219,7 @@ const CreateSaleModal: React.FC<{
 
         const { error } = await supabase.from('sales').insert({
             ...formData,
-            sale_date: new Date(formData.sale_date).toISOString()
+            sale_date: new Date(formData.sale_date + 'T12:00:00').toISOString()
         });
 
         if (!error) {
@@ -385,7 +385,7 @@ const EditSaleModal: React.FC<{
     const handleSave = async () => {
         const { error } = await supabase.from('sales').update({
             ...formData,
-            sale_date: new Date(formData.sale_date).toISOString()
+            sale_date: new Date(formData.sale_date + 'T12:00:00').toISOString()
         }).eq('id', sale.id);
 
         if (!error) {

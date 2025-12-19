@@ -25,12 +25,42 @@
 }
 
 .logo {
-    height: 60px;
+    height: 80px;
     width: auto;
     object-fit: contain;
     justify-self: center;
     filter: drop-shadow(0 0 10px rgba(18, 182, 138, 0.3));
     /* Subtle glow */
+}
+
+/* Daily Progress Section (New) */
+.dailyProgressSection {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dailyProgressBarBg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 0.25rem;
+}
+
+.dailyProgressBarFill {
+    height: 100%;
+    background: #38bdf8;
+    /* Sky Blue default for daily */
+    border-radius: 99px;
+    transition: width 1s ease-out;
+}
+
+.dailyProgressBarFill.hit {
+    background: #facc15;
+    /* Yellow for hitting daily target */
+    box-shadow: 0 0 10px #facc15;
 }
 
 .backButton {

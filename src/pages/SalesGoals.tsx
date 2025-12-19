@@ -235,7 +235,7 @@ export const SalesGoals: React.FC = () => {
                         if (day.isPast && !day.isWeekend && day.targetValue) {
                             valueColor = day.value >= day.targetValue ? '#10b981' : '#ef4444';
                         } else if (!day.isPast && !day.isWeekend) {
-                            valueColor = 'var(--primary-main)'; // Projected values in blueish
+                            valueColor = '#ca8a04'; // Dull Yellow (Yellow-600) for future projection
                         }
 
                         return (
