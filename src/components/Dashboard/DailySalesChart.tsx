@@ -35,17 +35,27 @@ export const DailySalesChart: React.FC<DailySalesChartProps> = ({ sales }) => {
         const now = new Date();
         const data: DataPoint[] = [];
 
+        // Helper para garantir a data local no formato YYYY-MM-DD
+        const getLocalDateKey = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
         // Últimos 30 dias
         for (let i = 29; i >= 0; i--) {
             const date = new Date(now);
             date.setDate(date.getDate() - i);
-            const dayKey = date.toISOString().split('T')[0];
+            const dayKey = getLocalDateKey(date);
 
             // Soma o amount (faturamento) do dia
             const dailyTotal = sales
                 .filter(sale => {
-                    const saleDate = new Date(sale.sale_date).toISOString().split('T')[0];
-                    return saleDate === dayKey;
+                    // Converter a data da venda (UTC ISO) para Objeto Date e extrair a chave Local
+                    const saleDateObj = new Date(sale.sale_date);
+                    const saleLocalKey = getLocalDateKey(saleDateObj);
+                    return saleLocalKey === dayKey;
                 })
                 .reduce((acc, curr) => acc + Number(curr.amount), 0);
 

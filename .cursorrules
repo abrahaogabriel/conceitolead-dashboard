@@ -1,0 +1,35 @@
+# Projeto: Conceito Lead Dashboard
+
+## Contexto Geral
+Este é um dashboard corporativo para a "Conceito Lead", focado em gestão de vendas, metas e clientes. O sistema deve transmitir profissionalismo, com um design "Premium".
+
+## Stack Tecnológica
+- **Frontend**: React (Vite) + TypeScript.
+- **Estilização**: CSS Modules (`.module.css`) e Variáveis CSS globais (`src/styles/variables.css`).
+  - *Preferência*: Usar CSS puro/Modules mantendo a consistência com as variáveis de cor da marca (Verde Principal: `#12B68A`).
+- **Backend**: Supabase (Postgres + Auth + Realtime).
+- **Ícones**: `lucide-react`.
+
+## Regras de Negócio Importantes
+1. **Atribuição de Vendas**:
+   - Uma venda pertence a um vendedor se: `sales.salesperson_id == profile.id` **OU** `sales.utm_source == profile.utm_code`.
+   - Essa lógica dual é CRÍTICA, pois o n8n injeta vendas muitas vezes apenas com a UTM.
+2. **Dashboard de TV (`/tv-dashboard`)**:
+   - Funciona em **Realtime** (escuta `INSERT` na tabela `sales`).
+   - Requer que a tabela `sales` tenha o Realtime ativado no Supabase Replication.
+   - Design Dark Mode exclusivo, sem scroll (viewport fixo), com animações de confete e som para novas vendas.
+3. **Cálculo de Projeção**:
+   - Projeção Linear: `(Vendido / Dias Corridos) * Dias Totais do Mês`.
+
+## Fluxo de Automação
+- O cliente utiliza **n8n** para automações de backend (ex: webhook de plataforma de pagamento -> n8n -> Supabase).
+- Sempre assuma que dados podem chegar externamente de forma automática.
+
+## Padrões de Código & UI
+- **Rotas**: `src/App.tsx`. Usar `ProtectedStandaloneRoute` para páginas focadas (como TV) e `ProtectedRoleRoute` para áreas administrativas.
+- **Tratamento de Erros**: O Supabase pode retornar erros de RLS. Se uma query falhar, verifique se o usuário logado tem a `role` correta ou sugira ajuste nas Policies.
+- **Design**: Priorizar interfaces limpas, animações suaves (`transition: all 0.2s`) e feedback visual claro.
+
+## Ambiente
+- SO: Windows (Powershell).
+- Gerenciador de Pacotes: `npm`.
